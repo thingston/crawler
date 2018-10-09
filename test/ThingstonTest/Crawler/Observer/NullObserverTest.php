@@ -1,15 +1,23 @@
 <?php
 
+/**
+ * Thingston Crawler
+ *
+ * @version 0.1.0
+ * @link https://github.com/thingston/crawler Public Git repository
+ * @copyright (c) 2018, Pedro Ferreira <https://thingston.com>
+ * @license https://opensource.org/licenses/MIT MIT
+ */
+
 namespace ThingstonTest\Crawler\Observer;
 
 use GuzzleHttp\Exception\TransferException;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use PHPUnit\Framework\TestCase;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 use Thingston\Crawler\Crawler;
 use Thingston\Crawler\Observer\NullObserver;
-use Thingston\Crawler\Observer\ObserverInterface;
 
 class NullObserverTest extends TestCase
 {

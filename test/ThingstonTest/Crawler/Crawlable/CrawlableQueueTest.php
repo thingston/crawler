@@ -1,12 +1,18 @@
 <?php
 
+/**
+ * Thingston Crawler
+ *
+ * @version 0.1.0
+ * @link https://github.com/thingston/crawler Public Git repository
+ * @copyright (c) 2018, Pedro Ferreira <https://thingston.com>
+ * @license https://opensource.org/licenses/MIT MIT
+ */
+
 namespace ThingstonTest\Crawler\Crawlable;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\UriInterface;
 use Thingston\Crawler\Crawlable\CrawlableQueue;
-use Thingston\Crawler\Crawlable\Crawlable;
-use Thingston\Crawler\UriFactory;
 use Thingston\Crawler\Storage\StorageInterface;
 
 class CrawlableQueueTest extends TestCase

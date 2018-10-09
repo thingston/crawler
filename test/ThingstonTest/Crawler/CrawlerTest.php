@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Thingston Crawler
+ *
+ * @version 0.1.0
+ * @link https://github.com/thingston/crawler Public Git repository
+ * @copyright (c) 2018, Pedro Ferreira <https://thingston.com>
+ * @license https://opensource.org/licenses/MIT MIT
+ */
+
 namespace ThingstonTest\Crawler;
 
 use GuzzleHttp\ClientInterface;

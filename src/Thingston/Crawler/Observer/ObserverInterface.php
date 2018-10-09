@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Thingston Crawler
+ *
+ * @version 0.1.0
+ * @link https://github.com/thingston/crawler Public Git repository
+ * @copyright (c) 2018, Pedro Ferreira <https://thingston.com>
+ * @license https://opensource.org/licenses/MIT MIT
+ */
+
 namespace Thingston\Crawler\Observer;
 
 use GuzzleHttp\Exception\TransferException;
@@ -8,6 +17,11 @@ use Psr\Http\Message\ResponseInterface;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 use Thingston\Crawler\Crawler;
 
+/**
+ * Observer interface.
+ *
+ * @author Pedro Ferreira <pedro@thingston.com>
+ */
 interface ObserverInterface
 {
 
