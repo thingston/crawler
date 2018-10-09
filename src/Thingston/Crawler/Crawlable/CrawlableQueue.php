@@ -1,0 +1,69 @@
+<?php
+
+namespace Thingston\Crawler\Crawlable;
+
+use Thingston\Crawler\Crawlable\CrawlableInterface;
+use Thingston\Crawler\Storage\ArrayStorage;
+use Thingston\Crawler\Storage\StorageAwareTrait;
+use Thingston\Crawler\Storage\StorageInterface;
+
+class CrawlableQueue implements CrawlableQueueInterface
+{
+
+    /**
+     * Implements StorageAwareInterface
+     */
+    use StorageAwareTrait;
+
+    /**
+     * Create new instance.
+     *
+     * @param StorageInterface|null $storage
+     */
+    public function __construct(StorageInterface $storage = null)
+    {
+        $this->setStorage($storage ?? new ArrayStorage());
+    }
+
+    /**
+     * Push a new element to the queue.
+     *
+     * @param CrawlableInterface $crawlable
+     * @return CrawlableQueueInterface
+     */
+    public function enqueue(CrawlableInterface $crawlable): CrawlableQueueInterface
+    {
+        $key = $crawlable->getKey();
+        $this->storage[$key] = $crawlable;
+
+        return $this;
+    }
+
+    /**
+     * Shift first element of the queue.
+     *
+     * @return CrawlableInterface|null
+     */
+    public function dequeue(): ?CrawlableInterface
+    {
+        if (true === $this->storage->isEmpty()) {
+            return null;
+        }
+
+        $this->storage->rewind();
+        $crawlable = $this->storage->current();
+        unset($this->storage[$crawlable->getKey()]);
+
+        return $crawlable;
+    }
+
+    /**
+     * Count how many elements are in the queue.
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        return $this->storage->count();
+    }
+}
