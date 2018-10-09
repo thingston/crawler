@@ -1,6 +1,15 @@
 {
+    "name": "thingston/crawler",
+    "type": "library",
+    "description": "Web crawler based on PHP Guzzle HTTP Client with concurrency support for faster operation.",
+    "keywords": ["php", "crawler"],
+    "homepage": "https://thingston.com",
+    "license": "MIT",
+    "authors": [
+        {"name": "Pedro Ferreira", "email": "pedro@thingston.com"}
+    ],
     "require": {
-        "php": "^7.2.3",
+        "php": "^7.1",
         "psr/http-message": "^1.0",
         "guzzlehttp/guzzle": "^6.3"
     },

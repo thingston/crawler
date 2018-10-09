@@ -2,14 +2,14 @@ Thingston Crawler
 =================
 
 Web crawler based on PHP [Guzzle HTTP Client](http://docs.guzzlephp.org/) with concurrency support for faster operation.
-Includes support for any content-type download.
+Includes support for any content-type download, link profiler and response observers.
 
 Requirements
 ------------
 
 Thingston Crawler requires:
 
--   [PHP 7.2.3](https://secure.php.net/releases/7_2_3.php) or above.
+-   [PHP 7.1](https://secure.php.net/releases/7_1_0.php) or above.
 
 Instalation
 -----------
