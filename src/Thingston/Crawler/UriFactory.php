@@ -115,4 +115,15 @@ class UriFactory
 
         return $params;
     }
+
+    /**
+     * Create a robots.txt for a given URI host's.
+     *
+     * @param UriInterface|string $uri
+     * @return UriInterface
+     */
+    public static function robotify($uri): UriInterface
+    {
+        return static::create($uri)->withPath('/robots.txt')->withQuery('')->withFragment('');
+    }
 }

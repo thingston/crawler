@@ -83,4 +83,10 @@ class UriFactoryTest extends TestCase
             [md5('localhost/?a=1&b=2'), 'http://localhost/?b=2&a=1'],
         ];
     }
+
+    public function testRobotify()
+    {
+        $uri = 'http://example.org/path/file.html?a=1#foo';
+        $this->assertEquals('http://example.org/robots.txt', UriFactory::robotify($uri));
+    }
 }

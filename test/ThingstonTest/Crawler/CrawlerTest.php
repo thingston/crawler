@@ -17,6 +17,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\TransferException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use PHPUnit\Framework\TestCase;
 use Thingston\Crawler\Crawlable;
 use Thingston\Crawler\Crawler;
@@ -113,10 +114,14 @@ class CrawlerTest extends TestCase
         $this->assertTrue($crawler->hasObserver($observer));
     }
 
-    public function testCrawlWithSuccess()
+    public function testCrawl()
     {
+        $body = $this->getMockBuilder(StreamInterface::class)->getMock();
+
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
         $response->expects($this->once())->method('getStatusCode')->willReturn(200);
+        $response->expects($this->once())->method('getHeaders')->willReturn([]);
+        $response->expects($this->once())->method('getBody')->willReturn($body);
 
         $client = $this->getMockBuilder(ClientInterface::class)->getMock();
         $client->expects($this->once())->method('request')->willReturn($response);
@@ -126,47 +131,29 @@ class CrawlerTest extends TestCase
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
 
+        $this->assertNull($crawlable->getStart());
+        $this->assertNull($crawlable->getDuration());
         $this->assertNull($crawlable->getCrawled());
         $this->assertNull($crawlable->getStatus());
 
-        $this->assertSame($response, $crawler->crawl($crawlable));
+        $crawler->crawl($crawlable);
 
+        $this->assertGreaterThan(0, $crawlable->getStart());
+        $this->assertGreaterThan(0, $crawlable->getDuration());
         $this->assertInstanceOf(\DateTimeInterface::class, $crawlable->getCrawled());
         $this->assertEquals(200, $crawlable->getStatus());
     }
 
-    public function testCrawlWithClientException()
+    public function testCrawlWithException()
     {
         $request = $this->getMockBuilder(RequestInterface::class)->getMock();
 
-        $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
-        $response->expects($this->any())->method('getStatusCode')->willReturn(404);
-
-        $exception = new ClientException('Page not found.', $request, $response);
-
-        $client = $this->getMockBuilder(ClientInterface::class)->getMock();
-        $client->expects($this->once())->method('request')->willThrowException($exception);
-
-        $crawler = new Crawler();
-        $crawler->setClient($client);
-
-        $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
-
-        $this->assertNull($crawlable->getCrawled());
-        $this->assertNull($crawlable->getStatus());
-
-        $this->assertSame($response, $crawler->crawl($crawlable));
-
-        $this->assertInstanceOf(\DateTimeInterface::class, $crawlable->getCrawled());
-        $this->assertEquals(404, $crawlable->getStatus());
-    }
-
-    public function testCrawlWithRequestExceptionHavingResponse()
-    {
-        $request = $this->getMockBuilder(RequestInterface::class)->getMock();
+        $body = $this->getMockBuilder(StreamInterface::class)->getMock();
 
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
         $response->expects($this->any())->method('getStatusCode')->willReturn(400);
+        $response->expects($this->once())->method('getHeaders')->willReturn([]);
+        $response->expects($this->once())->method('getBody')->willReturn($body);
 
         $exception = new RequestException('Bad request', $request, $response);
 
@@ -178,47 +165,11 @@ class CrawlerTest extends TestCase
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
 
-        $this->assertNull($crawlable->getCrawled());
         $this->assertNull($crawlable->getStatus());
 
-        $this->assertSame($response, $crawler->crawl($crawlable));
+        $crawler->crawl($crawlable);
 
-        $this->assertInstanceOf(\DateTimeInterface::class, $crawlable->getCrawled());
         $this->assertEquals(400, $crawlable->getStatus());
-    }
-
-    public function testCrawlWithRequestExceptionNotHavingResponse()
-    {
-        $request = $this->getMockBuilder(RequestInterface::class)->getMock();
-
-        $exception = new RequestException('Bad request', $request);
-
-        $client = $this->getMockBuilder(ClientInterface::class)->getMock();
-        $client->expects($this->once())->method('request')->willThrowException($exception);
-
-        $crawler = new Crawler();
-        $crawler->setClient($client);
-
-        $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
-
-        $this->expectException(get_class($exception));
-        $crawler->crawl($crawlable);
-    }
-
-    public function testCrawlWithException()
-    {
-        $exception = new \Exception('This is a bug');
-
-        $client = $this->getMockBuilder(ClientInterface::class)->getMock();
-        $client->expects($this->once())->method('request')->willThrowException($exception);
-
-        $crawler = new Crawler();
-        $crawler->setClient($client);
-
-        $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
-
-        $this->expectException(get_class($exception));
-        $crawler->crawl($crawlable);
     }
 
     public function testFulfilled()
@@ -228,7 +179,12 @@ class CrawlerTest extends TestCase
         $observer = new Observer\NullObserver();
         $crawler->addObserver($observer);
 
+        $body = $this->getMockBuilder(StreamInterface::class)->getMock();
+
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
+        $response->expects($this->once())->method('getStatusCode')->willReturn(200);
+        $response->expects($this->once())->method('getHeaders')->willReturn([]);
+        $response->expects($this->once())->method('getBody')->willReturn($body);
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
         $crawler->getCrawledCollection()->add($crawlable);

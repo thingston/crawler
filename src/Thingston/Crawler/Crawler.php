@@ -11,18 +11,22 @@
 
 namespace Thingston\Crawler;
 
-use DateTime;
+use Exception;
 use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
+use RobotsTxtParser;
+use Thingston\Crawler\Crawlable\Crawlable;
+use Thingston\Crawler\Crawlable\CrawlableCollection;
 use Thingston\Crawler\Crawlable\CrawlableCollectionInterface;
+use Thingston\Crawler\Crawlable\CrawlableInterface;
+use Thingston\Crawler\Crawlable\CrawlableQueue;
 use Thingston\Crawler\Crawlable\CrawlableQueueInterface;
 use Thingston\Crawler\Observer\ObserverInterface;
 use Thingston\Crawler\Profiler\ProfilerInterface;
@@ -55,6 +59,11 @@ class Crawler
      * Default max depth.
      */
     const DEFAULT_DEPTH = 0;
+
+    /**
+     * Default flag to respect robots.txt
+     */
+    const DEFAULT_ROBOTS = true;
 
     /**
      * @var \GuzzleHttp\ClientInterface
@@ -100,6 +109,11 @@ class Crawler
      * @var int
      */
     private $depth = self::DEFAULT_DEPTH;
+
+    /**
+     * @var bool
+     */
+    private $respectRobots = self::DEFAULT_ROBOTS;
 
     /**
      * @var array
@@ -176,7 +190,7 @@ class Crawler
     public function getCrawlingQueue(): CrawlableQueueInterface
     {
         if (null === $this->crawlingQueue) {
-            $this->crawlingQueue = new Crawlable\CrawlableQueue();
+            $this->crawlingQueue = new CrawlableQueue();
         }
 
         return $this->crawlingQueue;
@@ -203,7 +217,7 @@ class Crawler
     public function getCrawledCollection(): CrawlableCollectionInterface
     {
         if (null === $this->crawledCollection) {
-            $this->crawledCollection = new Crawlable\CrawlableCollection();
+            $this->crawledCollection = new CrawlableCollection();
         }
 
         return $this->crawledCollection;
@@ -352,6 +366,29 @@ class Crawler
     }
 
     /**
+     * Set robots flag.
+     *
+     * @param bool $robots
+     * @return Crawler
+     */
+    public function setRespectRobots(bool $robots): Crawler
+    {
+        $this->respectRobots = $robots;
+
+        return $this;
+    }
+
+    /**
+     * Get robots flag.
+     *
+     * @return bool
+     */
+    public function getRespectRobots(): bool
+    {
+        return $this->respectRobots;
+    }
+
+    /**
      * Add observer.
      *
      * @param ObserverInterface $observer
@@ -412,6 +449,27 @@ class Crawler
     }
 
     /**
+     * Get robots parser that applies for a given URI.
+     *
+     * @param UriInterface $uri
+     * @return RobotsTxtParser|null
+     */
+    public function getRobots(UriInterface $uri): ?RobotsTxtParser
+    {
+        $key = UriFactory::hash(UriFactory::robotify($uri));
+
+        if (null === $robots = $this->getCrawledCollection()->get($key)) {
+            return null;
+        }
+
+        if (null === $body = $robots->getBody()) {
+            return null;
+        }
+
+        return new RobotsTxtParser($body->getContents());
+    }
+
+    /**
      * Get pool request from crawling queue.
      *
      * @return Generator
@@ -436,7 +494,20 @@ class Crawler
                 continue;
             }
 
-            $crawled->add($crawlable);
+            if (true === $this->respectRobots) {
+                $uri = $crawlable->getUri();
+
+                if (null === $robots = $this->getRobots($uri)) {
+                    $robots = new Crawlable($uri);
+                    $crawling->enqueue($robots)->enqueue($crawlable);
+                    continue;
+                }
+
+                if (true === $robots->isDisallowed($uri, $this->userAgent)) {
+                    continue;
+                }
+            }
+
             $requeest = new Request('GET', $crawlable->getUri());
 
             /* @var $observer ObserverInterface */
@@ -444,7 +515,10 @@ class Crawler
                 $observer->request($requeest, $crawlable, $this);
             }
 
-            yield $crawlable->getId() => $requeest;
+            $crawled->add($crawlable);
+            $crawlable->setStart(microtime(true));
+
+            yield $crawlable->getKey() => $requeest;
         }
     }
 
@@ -481,31 +555,20 @@ class Crawler
      * Crawl a single resource.
      *
      * @param CrawlableInterface $crawlable
-     * @return ResponseInterface
+     * @return void
      */
-    public function crawl(Crawlable\CrawlableInterface $crawlable): ResponseInterface
+    public function crawl(CrawlableInterface $crawlable)
     {
+        $this->getCrawledCollection()->add($crawlable);
+        $key = $crawlable->getKey();
+        $crawlable->setStart(microtime(true));
+
         try {
             $response = $this->getClient()->request('GET', $crawlable->getUri());
-            $status = $response->getStatusCode();
-        } catch (ClientException $e) {
-            $status = $e->getResponse()->getStatusCode();
-            $response = $e->getResponse();
-        } catch (RequestException $e) {
-            if (false === $e->hasResponse()) {
-                throw $e;
-            }
-
-            $status = $e->getResponse()->getStatusCode();
-            $response = $e->getResponse();
+            $this->fulfilled($response, $key);
+        } catch (Exception $reason) {
+            $this->rejected($reason, $key);
         }
-
-        $crawled = new DateTime();
-
-        $crawlable->setCrawled($crawled)->setStatus($status);
-        $this->getCrawledCollection()->add($crawlable);
-
-        return $response;
     }
 
     /**
@@ -517,7 +580,7 @@ class Crawler
     public function fulfilled(ResponseInterface $response, string $key)
     {
         $crawlable = $this->getCrawledCollection()->get($key);
-        //dump($response->getStatusCode() . ' -> ' . $crawlable->getUri());
+        $this->updateCrawlable($crawlable, $response);
 
         /* @var $observer ObserverInterface */
         foreach ($this->getObservers() as $observer) {
@@ -528,16 +591,43 @@ class Crawler
     /**
      * Callable method for rejected requests.
      *
-     * @param TransferException $reason
+     * @param Exception $reason
      * @param string $key
      */
-    public function rejected(TransferException $reason, string $key)
+    public function rejected(Exception $reason, string $key)
     {
         $crawlable = $this->getCrawledCollection()->get($key);
+
+        $response = $reason instanceof RequestException && $reason->hasResponse() ? $reason->getResponse() : null;
+        $this->updateCrawlable($crawlable, $response);
 
         /* @var $observer ObserverInterface */
         foreach ($this->getObservers() as $observer) {
             $observer->rejected($reason, $crawlable, $this);
         }
+    }
+
+    /**
+     * Update crawlable after a request.
+     *
+     * @param CrawlableInterface $crawlable
+     * @param ResponseInterface $response
+     * @return void
+     */
+    protected function updateCrawlable(CrawlableInterface $crawlable, ResponseInterface $response = null)
+    {
+        if (null !== $start = $crawlable->getStart()) {
+            $crawlable->setDuration(microtime(true) - $start);
+        }
+
+        if (null === $response) {
+            $crawlable->setStatus(500);
+
+            return;
+        }
+
+        $crawlable->setStatus($response->getStatusCode() ?? 500)
+                ->setHeaders($response->getHeaders() ?? [])
+                ->setBody($response->getBody());
     }
 }

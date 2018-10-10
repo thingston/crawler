@@ -11,8 +11,10 @@
 
 namespace Thingston\Crawler\Crawlable;
 
+use DateTime;
 use DateTimeInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\StreamInterface;
 use Thingston\Crawler\UriFactory;
 
 /**
@@ -39,6 +41,16 @@ class Crawlable implements CrawlableInterface
     private $parent;
 
     /**
+     * @var float
+     */
+    private $start;
+
+    /**
+     * @var duration
+     */
+    private $duration;
+
+    /**
      * @var DateTimeInterface
      */
     private $crawled;
@@ -47,6 +59,16 @@ class Crawlable implements CrawlableInterface
      * @var int
      */
     private $status;
+
+    /**
+     * @var array
+     */
+    private $headers;
+
+    /**
+     * @var StreamInterface
+     */
+    private $body;
 
     /**
      * Create new instance.
@@ -104,6 +126,52 @@ class Crawlable implements CrawlableInterface
     }
 
     /**
+     * Set start microtime.
+     *
+     * @param float $start
+     * @return CrawlableInterface
+     */
+    public function setStart(float $start): CrawlableInterface
+    {
+        $this->start = $start;
+
+        return $this;
+    }
+
+    /**
+     * Get start microtime.
+     *
+     * @return float|null
+     */
+    public function getStart(): ?float
+    {
+        return $this->start;
+    }
+
+    /**
+     * Set duration of request in seconds.
+     *
+     * @param float $duration
+     * @return CrawlableInterface
+     */
+    public function setDuration(float $duration): CrawlableInterface
+    {
+        $this->duration = $duration;
+
+        return $this;
+    }
+
+    /**
+     * Get duration of request in seconds.
+     *
+     * @return float|null
+     */
+    public function getDuration(): ?float
+    {
+        return $this->duration;
+    }
+
+    /**
      * Set datetime when this was crawled.
      *
      * @param DateTimeInterface $crawled
@@ -123,6 +191,11 @@ class Crawlable implements CrawlableInterface
      */
     public function getCrawled(): ?DateTimeInterface
     {
+        if (null === $this->crawled && null !== $this->start && null !== $this->duration) {
+            $date = date('c', $this->start + $this->duration);
+            $this->crawled = new DateTime($date);
+        }
+
         return $this->crawled;
     }
 
@@ -147,5 +220,51 @@ class Crawlable implements CrawlableInterface
     public function getStatus(): ?int
     {
         return $this->status;
+    }
+
+    /**
+     * Set HTTPS headers.
+     *
+     * @param array $headers
+     * @return CrawlableInterface
+     */
+    public function setHeaders(array $headers): CrawlableInterface
+    {
+        $this->headers = $headers;
+
+        return $this;
+    }
+
+    /**
+     * Get HTTP headers.
+     *
+     * @return array|null
+     */
+    public function getHeaders(): ?array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * Set response body.
+     *
+     * @param StreamInterface $body
+     * @return CrawlableInterface
+     */
+    public function setBody(StreamInterface $body): CrawlableInterface
+    {
+        $this->body = $body;
+
+        return $this;
+    }
+
+    /**
+     * Get response body.
+     *
+     * @return StreamInterface|null
+     */
+    public function getBody(): ?StreamInterface
+    {
+        return $this->body;
     }
 }
