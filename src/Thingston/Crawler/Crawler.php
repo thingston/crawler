@@ -21,6 +21,10 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RobotsTxtParser;
 use Thingston\Crawler\Crawlable\Crawlable;
 use Thingston\Crawler\Crawlable\CrawlableCollection;
@@ -37,8 +41,13 @@ use Thingston\Crawler\Profiler\SameHostProfiler;
  *
  * @author Pedro Ferreira <pedro@thingston.com>
  */
-class Crawler
+class Crawler implements LoggerAwareInterface
 {
+
+    /**
+     * Implements LoggerAwareInterface
+     */
+    use LoggerAwareTrait;
 
     /**
      * Default timeout (seconds).
@@ -64,6 +73,37 @@ class Crawler
      * Default flag to respect robots.txt
      */
     const DEFAULT_ROBOTS = true;
+
+    /**
+     * Logger messages.
+     */
+    const LOG_CLIENT_SET = 'New client set.';
+    const LOG_CLIENT_CREATED = 'New client created.';
+    const LOG_CRAWLING_QUEUE_SET = 'New crawling queue set.';
+    const LOG_CRAWLING_QUEUE_CREATED = 'New crawling queue created.';
+    const LOG_CRAWLED_COLLECTION_SET = 'New crawled collection set.';
+    const LOG_CRAWLED_COLLECTION_CREATED = 'New crawled collection created.';
+    const LOG_PROFILER_SET = 'New profiler set.';
+    const LOG_PROFILER_CREATED = 'New profiler created.';
+    const LOG_USER_AGENT_SET = 'User-Agent set.';
+    const LOG_TIMEOUT_SET = 'Timeout set.';
+    const LOG_CONCURRENCY_SET = 'Concurrency set.';
+    const LOG_LIMIT_SET = 'Limit set.';
+    const LOG_DEPTH_SET = 'Max depth set.';
+    const LOG_RESPECT_ROBOTS_SET = 'Respect robots set.';
+    const LOG_OBSERVER_ADDED = 'Observer added.';
+    const LOG_OBSERVER_REMOVED = 'Observer removed.';
+    const LOG_POOL_CREATED = 'New pool created.';
+    const LOG_URI_ADDED = 'URI added to collection.';
+    const LOG_REQUEST_SENT = 'Request sent.';
+    const LOG_DURATION = 'Request duration.';
+    const LOG_RESPONSE = 'Response received.';
+    const LOG_NO_RESPONSE = 'No response received.';
+    const LOG_HEADERS = 'HTTP headers received.';
+    const LOG_LIMIT_REACH = 'Limit reach';
+    const LOG_TOO_DEEP = 'Too deep.';
+    const LOG_PROFILE_REFUSED = 'Profile refused.';
+    const LOG_ROBOTS_DISALLOWED = 'Disalloed by robots.txt.';
 
     /**
      * @var \GuzzleHttp\ClientInterface
@@ -93,32 +133,55 @@ class Crawler
     /**
      * @var int
      */
-    private $timeout = self::DEFAULT_TIMEOUT;
+    private $timeout;
 
     /**
      * @var int
      */
-    private $concurrency = self::DEFAULT_CONCURRENCY;
+    private $concurrency;
 
     /**
      * @var int
      */
-    private $limit = self::DEFAULT_LIMIT;
+    private $limit;
 
     /**
      * @var int
      */
-    private $depth = self::DEFAULT_DEPTH;
+    private $depth;
 
     /**
      * @var bool
      */
-    private $respectRobots = self::DEFAULT_ROBOTS;
+    private $respectRobots;
 
     /**
      * @var array
      */
     private $observers = [];
+
+    /**
+     * Create new instance.
+     *
+     * By default the following observers are registered:
+     *  - RedirectionObserver
+     *
+     * @param string $userAgent
+     * @param LoggerInterface $logger
+     */
+    public function __construct(string $userAgent, LoggerInterface $logger = null)
+    {
+        $this->logger = $logger ?? new NullLogger();
+
+        $this->setUserAgent($userAgent)
+                ->setTimeout(self::DEFAULT_TIMEOUT)
+                ->setConcurrency(self::DEFAULT_CONCURRENCY)
+                ->setLimit(self::DEFAULT_LIMIT)
+                ->setDepth(self::DEFAULT_DEPTH)
+                ->setRespectRobots(self::DEFAULT_ROBOTS);
+
+        $this->addObserver(new Observer\RedirectionObserver());
+    }
 
     /**
      * Set client.
@@ -129,12 +192,13 @@ class Crawler
     public function setClient(ClientInterface $client): Crawler
     {
         $this->client = $client;
+        $this->logger->debug(self::LOG_CLIENT_SET);
 
         return $this;
     }
 
     /**
-     * Getrequest headers.
+     * Get request headers.
      *
      * @return array
      */
@@ -164,6 +228,8 @@ class Crawler
                 RequestOptions::CONNECT_TIMEOUT => $this->timeout,
                 RequestOptions::TIMEOUT => $this->timeout,
             ]);
+
+            $this->logger->debug(self::LOG_CLIENT_CREATED);
         }
 
         return $this->client;
@@ -178,6 +244,7 @@ class Crawler
     public function setCrawlingQueue(CrawlableQueueInterface $crawlingQueue): Crawler
     {
         $this->crawlingQueue = $crawlingQueue;
+        $this->logger->debug(self::LOG_CRAWLING_QUEUE_SET);
 
         return $this;
     }
@@ -191,6 +258,7 @@ class Crawler
     {
         if (null === $this->crawlingQueue) {
             $this->crawlingQueue = new CrawlableQueue();
+            $this->logger->debug(self::LOG_CRAWLING_QUEUE_CREATED);
         }
 
         return $this->crawlingQueue;
@@ -205,6 +273,7 @@ class Crawler
     public function setCrawledCollection(CrawlableCollectionInterface $crawledCollection): Crawler
     {
         $this->crawledCollection = $crawledCollection;
+        $this->logger->debug(self::LOG_CRAWLED_COLLECTION_SET);
 
         return $this;
     }
@@ -218,6 +287,7 @@ class Crawler
     {
         if (null === $this->crawledCollection) {
             $this->crawledCollection = new CrawlableCollection();
+            $this->logger->debug(self::LOG_CRAWLED_COLLECTION_CREATED);
         }
 
         return $this->crawledCollection;
@@ -232,6 +302,7 @@ class Crawler
     public function setProfiler(ProfilerInterface $profiler): Crawler
     {
         $this->profiler = $profiler;
+        $this->logger->debug(self::LOG_PROFILER_SET);
 
         return $this;
     }
@@ -245,6 +316,7 @@ class Crawler
     {
         if (null === $this->profiler) {
             $this->profiler = new SameHostProfiler();
+            $this->logger->debug(self::LOG_PROFILER_CREATED);
         }
 
         return $this->profiler;
@@ -259,6 +331,7 @@ class Crawler
     public function setUserAgent(string $userAgent): Crawler
     {
         $this->userAgent = $userAgent;
+        $this->logger->debug(self::LOG_USER_AGENT_SET, ['user_agent' => $userAgent]);
 
         return $this;
     }
@@ -282,6 +355,7 @@ class Crawler
     public function setTimeout(int $timeout): Crawler
     {
         $this->timeout = abs($timeout);
+        $this->logger->debug(self::LOG_TIMEOUT_SET, ['timeout' => $timeout]);
 
         return $this;
     }
@@ -305,6 +379,7 @@ class Crawler
     public function setConcurrency(int $concurrency): Crawler
     {
         $this->concurrency = abs($concurrency);
+        $this->logger->debug(self::LOG_CONCURRENCY_SET, ['concurrency' => $concurrency]);
 
         return $this;
     }
@@ -328,6 +403,7 @@ class Crawler
     public function setLimit(int $limit): Crawler
     {
         $this->limit = abs($limit);
+        $this->logger->debug(self::LOG_LIMIT_SET, ['limit' => $limit]);
 
         return $this;
     }
@@ -351,6 +427,7 @@ class Crawler
     public function setDepth(int $depth): Crawler
     {
         $this->depth = abs($depth);
+        $this->logger->debug(self::LOG_DEPTH_SET, ['depth' => $depth]);
 
         return $this;
     }
@@ -368,12 +445,13 @@ class Crawler
     /**
      * Set robots flag.
      *
-     * @param bool $robots
+     * @param bool $respectRobots
      * @return Crawler
      */
-    public function setRespectRobots(bool $robots): Crawler
+    public function setRespectRobots(bool $respectRobots): Crawler
     {
-        $this->respectRobots = $robots;
+        $this->respectRobots = $respectRobots;
+        $this->logger->debug(self::LOG_RESPECT_ROBOTS_SET, ['respect_robots' => $respectRobots]);
 
         return $this;
     }
@@ -398,6 +476,7 @@ class Crawler
     {
         if (false === $this->hasObserver($observer)) {
             array_push($this->observers, $observer);
+            $this->logger->debug(self::LOG_OBSERVER_ADDED, ['observer' => get_class($observer)]);
         }
 
         return $this;
@@ -431,6 +510,7 @@ class Crawler
         foreach ($this->observers as $key => $obs) {
             if ($observer == $obs) {
                 unset($this->observers[$key]);
+                $this->logger->debug(self::LOG_OBSERVER_REMOVED, ['observer' => get_class($observer)]);
                 break;
             }
         }
@@ -493,14 +573,17 @@ class Crawler
         while ($crawlable = $crawling->dequeue()) {
             if (0 < $this->limit && $this->limit < $crawled->count()) {
                 $crawling->clear();
+                $this->logger->notice(self::LOG_LIMIT_REACH);
                 continue;
             }
 
-            if ($this->depth < $crawlable->getDepth()) {
+            if ($this->depth < $depth = $crawlable->getDepth()) {
+                $this->logger->notice(self::LOG_TOO_DEEP, ['uri' => (string) $crawlable->getUri(), 'depth' => $depth]);
                 continue;
             }
 
             if (false === $this->getProfiler()->crawl($crawlable)) {
+                $this->logger->notice(self::LOG_PROFILE_REFUSED, ['uri' => (string) $crawlable->getUri()]);
                 continue;
             }
 
@@ -509,6 +592,7 @@ class Crawler
                 $robots = $this->getRobots($uri);
 
                 if (null !== $robots && true === $robots->isDisallowed($uri, $this->userAgent)) {
+                    $this->logger->notice(self::LOG_ROBOTS_DISALLOWED, ['uri' => (string) $crawlable->getUri()]);
                     continue;
                 }
             }
@@ -522,6 +606,9 @@ class Crawler
 
             $crawled->add($crawlable);
             $crawlable->setStart(microtime(true));
+
+            $this->logger->debug(self::LOG_URI_ADDED, ['uri' => (string) $crawlable->getUri()]);
+            $this->logger->info(self::LOG_REQUEST_SENT, ['uri' => (string) $crawlable->getUri()]);
 
             yield $crawlable->getKey() => $requeest;
         }
@@ -542,13 +629,19 @@ class Crawler
         }
 
         $client = $this->getClient();
+        $options = $client->getConfig();
 
         while (false === $crawling->isEmpty()) {
             $pool = new Pool($client, $this->getPoolRequests(), [
                 'concurrency' => $this->concurrency,
-                'options' => $client->getConfig(),
+                'options' => $options,
                 'fulfilled' => [$this, 'fulfilled'],
                 'rejected' => [$this, 'rejected'],
+            ]);
+
+            $this->logger->debug(self::LOG_POOL_CREATED, [
+                'concurrency' => $this->concurrency,
+                'options' => $options,
             ]);
 
             $promise = $pool->promise();
@@ -565,8 +658,13 @@ class Crawler
     public function crawl(CrawlableInterface $crawlable)
     {
         $this->getCrawledCollection()->add($crawlable);
+
+        $this->logger->debug(self::LOG_URI_ADDED, ['uri' => (string) $crawlable->getUri()]);
+
         $key = $crawlable->getKey();
         $crawlable->setStart(microtime(true));
+
+        $this->logger->info(self::LOG_REQUEST_SENT, ['uri' => (string) $crawlable->getUri()]);
 
         try {
             $response = $this->getClient()->request('GET', $crawlable->getUri());
@@ -623,10 +721,16 @@ class Crawler
     {
         if (null !== $start = $crawlable->getStart()) {
             $crawlable->setDuration(microtime(true) - $start);
+
+            $this->logger->info(self::LOG_DURATION, [
+                'uri' => (string) $crawlable->getUri(),
+                'duration' => $crawlable->getDuration(),
+            ]);
         }
 
         if (null === $response) {
             $crawlable->setStatus(500);
+            $this->logger->notice(self::LOG_NO_RESPONSE, ['uri' => $crawlable->getUri()]);
 
             return;
         }
@@ -634,5 +738,10 @@ class Crawler
         $crawlable->setStatus($response->getStatusCode() ?? 500)
                 ->setHeaders($response->getHeaders() ?? [])
                 ->setBody($response->getBody());
+
+        $this->logger->info(self::LOG_RESPONSE, [
+            'uri' => (string) $crawlable->getUri(),
+            'status' => $crawlable->getStatus(),
+        ]);
     }
 }

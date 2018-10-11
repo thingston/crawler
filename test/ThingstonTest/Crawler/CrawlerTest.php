@@ -31,41 +31,41 @@ class CrawlerTest extends TestCase
     public function testUserAgent()
     {
         $userAgent = 'MyCrawler/1.0';
-        $crawler = (new Crawler())->setUserAgent($userAgent);
+            $crawler = (new Crawler('MyBot/1.0'))->setUserAgent($userAgent);
         $this->assertEquals($userAgent, $crawler->getUserAgent());
     }
 
     public function testTimeout()
     {
         $timeout = 120;
-        $crawler = (new Crawler())->setTimeout($timeout);
+        $crawler = (new Crawler('MyBot/1.0'))->setTimeout($timeout);
         $this->assertEquals($timeout, $crawler->getTimeout());
     }
 
     public function testConcurrency()
     {
         $concurrency = 20;
-        $crawler = (new Crawler())->setConcurrency($concurrency);
+        $crawler = (new Crawler('MyBot/1.0'))->setConcurrency($concurrency);
         $this->assertEquals($concurrency, $crawler->getConcurrency());
     }
 
     public function testLimit()
     {
         $limit = 1000;
-        $crawler = (new Crawler())->setLimit($limit);
+        $crawler = (new Crawler('MyBot/1.0'))->setLimit($limit);
         $this->assertEquals($limit, $crawler->getLimit());
     }
 
     public function testDepth()
     {
         $depth = 3;
-        $crawler = (new Crawler())->setDepth($depth);
+        $crawler = (new Crawler('MyBot/1.0'))->setDepth($depth);
         $this->assertEquals($depth, $crawler->getDepth());
     }
 
     public function testClient()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $this->assertInstanceOf(ClientInterface::class, $crawler->getClient());
 
         $client = new \GuzzleHttp\Client();
@@ -75,7 +75,7 @@ class CrawlerTest extends TestCase
 
     public function testCrawlingQueue()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $this->assertInstanceOf(Crawlable\CrawlableQueueInterface::class, $crawler->getCrawlingQueue());
 
         $crawlingQueue = new Crawlable\CrawlableQueue();
@@ -85,7 +85,7 @@ class CrawlerTest extends TestCase
 
     public function testCrawledCollection()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $this->assertInstanceOf(Crawlable\CrawlableCollectionInterface::class, $crawler->getCrawledCollection());
 
         $crawledCollection = new Crawlable\CrawlableCollection();
@@ -95,7 +95,7 @@ class CrawlerTest extends TestCase
 
     public function testProfiler()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $this->assertInstanceOf(Profiler\ProfilerInterface::class, $crawler->getProfiler());
 
         $profiler = new Profiler\SameHostProfiler();
@@ -105,12 +105,12 @@ class CrawlerTest extends TestCase
 
     public function testObservers()
     {
-        $crawler = new Crawler();
-        $this->assertCount(0, $crawler->getObservers());
+        $crawler = new Crawler('MyBot/1.0');
+        $this->assertCount(1, $crawler->getObservers());
 
         $observer = new Observer\NullObserver();
         $crawler->addObserver($observer);
-        $this->assertCount(1, $crawler->getObservers());
+        $this->assertCount(2, $crawler->getObservers());
         $this->assertTrue($crawler->hasObserver($observer));
     }
 
@@ -119,14 +119,14 @@ class CrawlerTest extends TestCase
         $body = $this->getMockBuilder(StreamInterface::class)->getMock();
 
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
-        $response->expects($this->once())->method('getStatusCode')->willReturn(200);
-        $response->expects($this->once())->method('getHeaders')->willReturn([]);
-        $response->expects($this->once())->method('getBody')->willReturn($body);
+        $response->expects($this->any())->method('getStatusCode')->willReturn(200);
+        $response->expects($this->any())->method('getHeaders')->willReturn([]);
+        $response->expects($this->any())->method('getBody')->willReturn($body);
 
         $client = $this->getMockBuilder(ClientInterface::class)->getMock();
-        $client->expects($this->once())->method('request')->willReturn($response);
+        $client->expects($this->any())->method('request')->willReturn($response);
 
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $crawler->setClient($client);
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
@@ -152,15 +152,15 @@ class CrawlerTest extends TestCase
 
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
         $response->expects($this->any())->method('getStatusCode')->willReturn(400);
-        $response->expects($this->once())->method('getHeaders')->willReturn([]);
-        $response->expects($this->once())->method('getBody')->willReturn($body);
+        $response->expects($this->any())->method('getHeaders')->willReturn([]);
+        $response->expects($this->any())->method('getBody')->willReturn($body);
 
         $exception = new RequestException('Bad request', $request, $response);
 
         $client = $this->getMockBuilder(ClientInterface::class)->getMock();
-        $client->expects($this->once())->method('request')->willThrowException($exception);
+        $client->expects($this->any())->method('request')->willThrowException($exception);
 
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
         $crawler->setClient($client);
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
@@ -174,7 +174,7 @@ class CrawlerTest extends TestCase
 
     public function testFulfilled()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
 
         $observer = new Observer\NullObserver();
         $crawler->addObserver($observer);
@@ -182,9 +182,9 @@ class CrawlerTest extends TestCase
         $body = $this->getMockBuilder(StreamInterface::class)->getMock();
 
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
-        $response->expects($this->once())->method('getStatusCode')->willReturn(200);
-        $response->expects($this->once())->method('getHeaders')->willReturn([]);
-        $response->expects($this->once())->method('getBody')->willReturn($body);
+        $response->expects($this->any())->method('getStatusCode')->willReturn(200);
+        $response->expects($this->any())->method('getHeaders')->willReturn([]);
+        $response->expects($this->any())->method('getBody')->willReturn($body);
 
         $crawlable = new Crawlable\Crawlable(UriFactory::create('http://example.org'));
         $crawler->getCrawledCollection()->add($crawlable);
@@ -194,7 +194,7 @@ class CrawlerTest extends TestCase
 
     public function testRejected()
     {
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
 
         $observer = new Observer\NullObserver();
         $crawler->addObserver($observer);

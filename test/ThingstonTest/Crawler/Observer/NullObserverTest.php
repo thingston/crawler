@@ -27,7 +27,7 @@ class NullObserverTest extends TestCase
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
         $reason = $this->getMockBuilder(TransferException::class)->getMock();
         $crawlable = $this->getMockBuilder(CrawlableInterface::class)->getMock();
-        $crawler = $this->getMockBuilder(Crawler::class)->getMock();
+        $crawler = $this->getMockBuilder(Crawler::class)->disableOriginalConstructor()->getMock();
 
         $observer = new NullObserver();
 

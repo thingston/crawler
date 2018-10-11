@@ -26,7 +26,7 @@ class RedirectionObserverTest extends TestCase
         $observer = new RedirectionObserver();
         $response = new Response(301, ['Location' => 'http://www.example.org']);
         $crawlable = new Crawlable(UriFactory::create('http://example.org'));
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
 
         $this->assertEmpty($crawler->getCrawlingQueue());
         $observer->fulfilled($response, $crawlable, $crawler);
@@ -40,7 +40,7 @@ class RedirectionObserverTest extends TestCase
         $observer = new RedirectionObserver();
         $response = new Response(301, ['Location' => 'http://example.org']);
         $crawlable = new Crawlable(UriFactory::create('http://example.org'));
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
 
         $this->assertEmpty($crawler->getCrawlingQueue());
         $observer->fulfilled($response, $crawlable, $crawler);
@@ -52,7 +52,7 @@ class RedirectionObserverTest extends TestCase
         $observer = new RedirectionObserver();
         $response = new Response(301, ['Location' => 'http://www.example.org']);
         $crawlable = new Crawlable(UriFactory::create('http://example.org'));
-        $crawler = new Crawler();
+        $crawler = new Crawler('MyBot/1.0');
 
         $crawled = new Crawlable(UriFactory::create('http://www.example.org'));
         $crawler->getCrawledCollection()->add($crawled);

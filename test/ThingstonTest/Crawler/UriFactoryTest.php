@@ -77,10 +77,9 @@ class UriFactoryTest extends TestCase
     {
         return [
             [UriFactory::hash(''), ''],
-            [md5('localhost/'), 'http://localhost/'],
-            [md5('localhost/'), 'https://localhost/'],
-            [md5('localhost/?a=1&b=2'), 'https://localhost/?a=1&b=2'],
-            [md5('localhost/?a=1&b=2'), 'http://localhost/?b=2&a=1'],
+            [md5('http://localhost/'), 'http://localhost/'],
+            [md5('http://localhost/?a=1&b=2'), 'http://localhost/?a=1&b=2'],
+            [md5('http://localhost/?a=1&b=2'), 'http://localhost/?b=2&a=1'],
         ];
     }
 
