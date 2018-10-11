@@ -82,7 +82,6 @@ class Crawlable implements CrawlableInterface
         $this->uri = $uri;
         $this->parent = $parent;
         $this->key = $key ?? UriFactory::hash($uri);
-        ;
     }
 
     /**
@@ -266,5 +265,13 @@ class Crawlable implements CrawlableInterface
     public function getBody(): ?StreamInterface
     {
         return $this->body;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return (string) $this->uri;
     }
 }

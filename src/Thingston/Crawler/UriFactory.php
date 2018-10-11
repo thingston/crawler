@@ -67,7 +67,7 @@ class UriFactory
      * @param bool $withFragment
      * @return string
      */
-    public static function hash($uri, bool $ignoreScheme = true, bool $withQuery = true, bool $withFragment = true): string
+    public static function hash($uri, bool $ignoreScheme = false, bool $withQuery = true, bool $withFragment = true): string
     {
         if (false === $uri instanceof UriInterface) {
             $uri = new Uri($uri);

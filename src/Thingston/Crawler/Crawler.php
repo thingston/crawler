@@ -452,21 +452,31 @@ class Crawler
      * Get robots parser that applies for a given URI.
      *
      * @param UriInterface $uri
+     * @param bool $retry
      * @return RobotsTxtParser|null
      */
-    public function getRobots(UriInterface $uri): ?RobotsTxtParser
+    public function getRobots(UriInterface $uri, bool $retry = true): ?RobotsTxtParser
     {
-        $key = UriFactory::hash(UriFactory::robotify($uri));
+        $crawlable = new Crawlable(UriFactory::robotify($uri));
+        $key = $crawlable->getKey();
 
         if (null === $robots = $this->getCrawledCollection()->get($key)) {
-            return null;
+            if (false === $retry) {
+                return null;
+            }
+
+            $this->crawl($crawlable);
+
+            return $this->getRobots($uri, false);
         }
 
         if (null === $body = $robots->getBody()) {
-            return null;
+            $contents = '';
+        } else {
+            $contents = $body->getContents();
         }
 
-        return new RobotsTxtParser($body->getContents());
+        return new RobotsTxtParser($contents);
     }
 
     /**
@@ -496,14 +506,9 @@ class Crawler
 
             if (true === $this->respectRobots) {
                 $uri = $crawlable->getUri();
+                $robots = $this->getRobots($uri);
 
-                if (null === $robots = $this->getRobots($uri)) {
-                    $robots = new Crawlable($uri);
-                    $crawling->enqueue($robots)->enqueue($crawlable);
-                    continue;
-                }
-
-                if (true === $robots->isDisallowed($uri, $this->userAgent)) {
+                if (null !== $robots && true === $robots->isDisallowed($uri, $this->userAgent)) {
                     continue;
                 }
             }

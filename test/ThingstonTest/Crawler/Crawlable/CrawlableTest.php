@@ -13,6 +13,7 @@ namespace ThingstonTest\Crawler\Crawlable;
 
 use DateTime;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
 use Thingston\Crawler\Crawlable\Crawlable;
 use Thingston\Crawler\UriFactory;
 
@@ -66,5 +67,47 @@ class CrawlableTest extends TestCase
 
         $this->assertEquals($crawled, $crawlable->getCrawled());
         $this->assertEquals($status, $crawlable->getStatus());
+    }
+
+    public function testStartDurantionAndCreated()
+    {
+        $crawlable = new Crawlable(UriFactory::create('http://example.org'));
+
+        $start = microtime(true);
+        $duration = rand(1000, 10000) / 1000;
+
+        $this->assertNull($crawlable->getStart());
+        $this->assertNull($crawlable->getDuration());
+        $this->assertNull($crawlable->getCrawled());
+
+        $crawlable->setStart($start)->setDuration($duration);
+
+        $this->assertEquals($start, $crawlable->getStart());
+        $this->assertEquals($duration, $crawlable->getDuration());
+        $this->assertInstanceOf(\DateTimeInterface::class, $crawlable->getCrawled());
+
+        $crawled = new DateTime(date('c', $start + $duration));
+        $crawlable->setCrawled($crawled);
+        $this->assertSame($crawled, $crawlable->getCrawled());
+    }
+
+    public function testStatusHeadersAndBody()
+    {
+        $crawlable = new Crawlable(UriFactory::create('http://example.org'));
+
+        $this->assertNull($crawlable->getStatus());
+        $this->assertNull($crawlable->getHeaders());
+        $this->assertNull($crawlable->getHeaders());
+        $this->assertNull($crawlable->getBody());
+
+        $status = 200;
+        $headers = ['Date' => date('c')];
+        $body = $this->getMockBuilder(StreamInterface::class)->getMock();
+
+        $crawlable->setStatus($status)->setHeaders($headers)->setBody($body);
+
+        $this->assertEquals($status, $crawlable->getStatus());
+        $this->assertEquals($headers, $crawlable->getHeaders());
+        $this->assertSame($body, $crawlable->getBody());
     }
 }
