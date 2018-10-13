@@ -599,7 +599,7 @@ class Crawler implements LoggerAwareInterface
                 continue;
             }
 
-            if (true === $this->respectRobots) {
+            if (true === $this->respectRobots && '/robots.txt' !== $crawlable->getUri()->getPath()) {
                 $uri = $crawlable->getUri();
                 $robots = $this->getRobots($uri);
 
