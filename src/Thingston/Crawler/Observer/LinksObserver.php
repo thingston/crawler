@@ -28,6 +28,14 @@ class LinksObserver extends NullObserver
 {
 
     /**
+     * Priority values
+     */
+    const PRIORITY_HIGHEST = 20;
+    const PRIORITY_HIGH = 10;
+    const PRIORITY_LOW = -10;
+    const PRIORITY_LOWEST = -20;
+
+    /**
      * Process a fulfilled request.
      *
      * @param ResponseInterface $response
@@ -76,12 +84,14 @@ class LinksObserver extends NullObserver
             $uri = UriFactory::absolutify($a->getAttribute('href'), $base);
             $subset = [new Crawlable($uri, $crawlable)];
 
-            if ('' !== $uri->getFragment()) {
-                array_unshift($subset, new Crawlable($uri->withFragment(''), $crawlable));
+            if ('' !== $uri->getQuery()) {
+                $subset[0]->setPriority(self::PRIORITY_LOW);
+                array_push($subset, new Crawlable($uri->withQuery('')->withFragment(''), $crawlable));
             }
 
-            if ('' !== $uri->getQuery()) {
-                array_unshift($subset, new Crawlable($uri->withQuery('')->withFragment(''), $crawlable));
+            if ('' !== $uri->getFragment()) {
+                $subset[0]->setPriority(self::PRIORITY_LOWEST);
+                array_push($subset, new Crawlable($uri->withFragment(''), $crawlable));
             }
 
             foreach ($subset as $child) {
