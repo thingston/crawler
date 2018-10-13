@@ -183,6 +183,7 @@ class Crawler implements LoggerAwareInterface
                 ->setRespectRobots(self::DEFAULT_ROBOTS);
 
         $this->addObserver(new Observer\RedirectionObserver());
+        $this->addObserver(new Observer\LinksObserver());
     }
 
     /**
@@ -583,7 +584,7 @@ class Crawler implements LoggerAwareInterface
 
         /* @var $crawlable CrawlableInterface */
         while ($crawlable = $crawling->dequeue()) {
-            if (0 < $this->limit && $this->limit < $crawled->count()) {
+            if (0 < $this->limit && $this->limit <= $crawled->count()) {
                 $crawling->clear();
                 $this->logger->debug(self::LOG_LIMIT_REACH);
                 continue;
