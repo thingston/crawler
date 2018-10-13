@@ -77,6 +77,8 @@ class Crawler implements LoggerAwareInterface
     /**
      * Logger messages.
      */
+    const LOG_START = 'Crawler started.';
+    const LOG_COMPLETED = 'Crawler completed.';
     const LOG_CLIENT_SET = 'New client set.';
     const LOG_CLIENT_CREATED = 'New client created.';
     const LOG_CRAWLING_QUEUE_SET = 'New crawling queue set.';
@@ -529,6 +531,16 @@ class Crawler implements LoggerAwareInterface
     }
 
     /**
+     * Get logger.
+     *
+     * @return LoggerInterface
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
      * Get robots parser that applies for a given URI.
      *
      * @param UriInterface $uri
@@ -573,17 +585,17 @@ class Crawler implements LoggerAwareInterface
         while ($crawlable = $crawling->dequeue()) {
             if (0 < $this->limit && $this->limit < $crawled->count()) {
                 $crawling->clear();
-                $this->logger->notice(self::LOG_LIMIT_REACH);
+                $this->logger->debug(self::LOG_LIMIT_REACH);
                 continue;
             }
 
             if ($this->depth < $depth = $crawlable->getDepth()) {
-                $this->logger->notice(self::LOG_TOO_DEEP, ['uri' => (string) $crawlable->getUri(), 'depth' => $depth]);
+                $this->logger->debug(self::LOG_TOO_DEEP, ['uri' => (string) $crawlable->getUri(), 'depth' => $depth]);
                 continue;
             }
 
             if (false === $this->getProfiler()->crawl($crawlable)) {
-                $this->logger->notice(self::LOG_PROFILE_REFUSED, ['uri' => (string) $crawlable->getUri()]);
+                $this->logger->debug(self::LOG_PROFILE_REFUSED, ['uri' => (string) $crawlable->getUri()]);
                 continue;
             }
 
@@ -592,7 +604,7 @@ class Crawler implements LoggerAwareInterface
                 $robots = $this->getRobots($uri);
 
                 if (null !== $robots && true === $robots->isDisallowed($uri, $this->userAgent)) {
-                    $this->logger->notice(self::LOG_ROBOTS_DISALLOWED, ['uri' => (string) $crawlable->getUri()]);
+                    $this->logger->debug(self::LOG_ROBOTS_DISALLOWED, ['uri' => (string) $crawlable->getUri()]);
                     continue;
                 }
             }
@@ -621,6 +633,9 @@ class Crawler implements LoggerAwareInterface
      */
     public function start($uri = null)
     {
+        $this->logger->info(self::LOG_START);
+
+        $start = microtime(true);
         $crawling = $this->getCrawlingQueue();
 
         if (null !== $uri) {
@@ -641,12 +656,19 @@ class Crawler implements LoggerAwareInterface
 
             $this->logger->debug(self::LOG_POOL_CREATED, [
                 'concurrency' => $this->concurrency,
-                'options' => $options,
+                'headers' => $options['headers'],
             ]);
 
             $promise = $pool->promise();
             $promise->wait();
         }
+
+        $duration = microtime(true) - $start;
+
+        $this->logger->info(self::LOG_COMPLETED, [
+            'count' => $this->getCrawledCollection()->count(),
+            'duration' => $duration,
+        ]);
     }
 
     /**

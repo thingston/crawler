@@ -11,7 +11,7 @@
 
 namespace Thingston\Crawler\Observer;
 
-use GuzzleHttp\Exception\TransferException;
+use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
@@ -52,11 +52,11 @@ class NullObserver implements ObserverInterface
     /**
      * Process a rejected request.
      *
-     * @param TransferException $reason
+     * @param Exception $reason
      * @param CrawlableInterface $crawlable
      * @param Crawler $crawler
      */
-    public function rejected(TransferException $reason, CrawlableInterface $crawlable, Crawler $crawler)
+    public function rejected(Exception $reason, CrawlableInterface $crawlable, Crawler $crawler)
     {
         // nothing to do
     }

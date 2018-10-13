@@ -11,7 +11,7 @@
 
 namespace ThingstonTest\Crawler\Observer;
 
-use GuzzleHttp\Exception\TransferException;
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,7 +25,7 @@ class NullObserverTest extends TestCase
     {
         $request = $this->getMockBuilder(RequestInterface::class)->getMock();
         $response = $this->getMockBuilder(ResponseInterface::class)->getMock();
-        $reason = $this->getMockBuilder(TransferException::class)->getMock();
+        $reason = $this->getMockBuilder(Exception::class)->getMock();
         $crawlable = $this->getMockBuilder(CrawlableInterface::class)->getMock();
         $crawler = $this->getMockBuilder(Crawler::class)->disableOriginalConstructor()->getMock();
 
