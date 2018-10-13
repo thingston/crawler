@@ -46,6 +46,16 @@ class Crawlable implements CrawlableInterface
     private $start;
 
     /**
+     * @var int
+     */
+    private $periodicity = self::PERIODICITY_ALWAYS;
+
+    /**
+     * @var int
+     */
+    private $priority;
+
+    /**
      * @var duration
      */
     private $duration;
@@ -122,6 +132,52 @@ class Crawlable implements CrawlableInterface
     public function getDepth(): int
     {
         return null === $this->parent ? 0 : $this->parent->getDepth() + 1;
+    }
+
+    /**
+     * Set periodicity.
+     *
+     * @param int $periodicity
+     * @return CrawlableInterface
+     */
+    public function setPeriodicity(int $periodicity): CrawlableInterface
+    {
+        $this->periodicity = $periodicity;
+
+        return $this;
+    }
+
+    /**
+     * Get periodicity.
+     *
+     * @return int|null
+     */
+    public function getPeriodicity(): int
+    {
+        return $this->periodicity;
+    }
+
+    /**
+     * Set priority.
+     *
+     * @param int $priority
+     * @return CrawlableInterface
+     */
+    public function setPriority(int $priority): CrawlableInterface
+    {
+        $this->priority = $priority;
+
+        return $this;
+    }
+
+    /**
+     * Get priority.
+     *
+     * @return int|null
+     */
+    public function getPriority(): int
+    {
+        return $this->priority;
     }
 
     /**
@@ -274,4 +330,5 @@ class Crawlable implements CrawlableInterface
     {
         return (string) $this->uri;
     }
+
 }

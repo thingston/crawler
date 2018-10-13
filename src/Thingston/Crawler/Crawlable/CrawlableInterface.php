@@ -24,6 +24,17 @@ interface CrawlableInterface
 {
 
     /**
+     * Periodicityy codes
+     */
+    const PERIODICITY_ALWAYS = 0;
+    const PERIODICITY_HOURLY = 1;
+    const PERIODICITY_DAILY = 2;
+    const PERIODICITY_WEEKLY = 3;
+    const PERIODICITY_MONTHLY = 4;
+    const PERIODICITY_YEARLY = 5;
+    const PERIODICITY_NEVER = 6;
+
+    /**
      * Get URI.
      *
      * @return UriInterface
@@ -50,6 +61,36 @@ interface CrawlableInterface
      * @return int
      */
     public function getDepth(): int;
+
+    /**
+     * Set periodicity.
+     *
+     * @param int $periodicity
+     * @return CrawlableInterface
+     */
+    public function setPeriodicity(int $periodicity): CrawlableInterface;
+
+    /**
+     * Get periodicity.
+     *
+     * @return int|null
+     */
+    public function getPeriodicity(): int;
+
+    /**
+     * Set priority.
+     *
+     * @param int $priority
+     * @return CrawlableInterface
+     */
+    public function setPriority(int $priority): CrawlableInterface;
+
+    /**
+     * Get priority.
+     *
+     * @return int|null
+     */
+    public function getPriority(): int;
 
     /**
      * Set start microtime.
