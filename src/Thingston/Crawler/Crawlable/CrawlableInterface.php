@@ -78,6 +78,13 @@ interface CrawlableInterface
     public function getPeriodicity(): int;
 
     /**
+     * Check either periodicity is passed.
+     *
+     * @return bool
+     */
+    public function isPeriodicity(): bool;
+
+    /**
      * Set priority.
      *
      * @param int $priority
@@ -90,7 +97,7 @@ interface CrawlableInterface
      *
      * @return int|null
      */
-    public function getPriority(): int;
+    public function getPriority(): ?int;
 
     /**
      * Set start microtime.

@@ -11,6 +11,7 @@
 
 namespace Thingston\Crawler\Crawlable;
 
+use DateInterval;
 use DateTime;
 use DateTimeInterface;
 use Psr\Http\Message\UriInterface;
@@ -158,6 +159,44 @@ class Crawlable implements CrawlableInterface
     }
 
     /**
+     * Check either periodicity is passed.
+     *
+     * @return bool
+     */
+    public function isPeriodicity(): bool
+    {
+        if (null === $crawled = $this->getCrawled()) {
+            return true;
+        }
+
+        switch ($this->periodicity) {
+            case self::PERIODICITY_NEVER:
+                return false;
+            case self::PERIODICITY_YEARLY:
+                $interval = 365 * 24 * 3600;
+                break;
+            case self::PERIODICITY_MONTHLY:
+                $interval = 30 * 24 * 3600;
+                break;
+            case self::PERIODICITY_WEEKLY:
+                $interval = 7 * 24 * 3600;
+                break;
+            case self::PERIODICITY_DAILY:
+                $interval = 24 * 3600;
+                break;
+            case self::PERIODICITY_HOURLY:
+                $interval = 3600;
+                break;
+            default:
+                return true;
+        }
+
+        $period = $crawled->getTimestamp() + $interval;
+
+        return time() > $period;
+    }
+
+    /**
      * Set priority.
      *
      * @param int $priority
@@ -175,7 +214,7 @@ class Crawlable implements CrawlableInterface
      *
      * @return int|null
      */
-    public function getPriority(): int
+    public function getPriority(): ?int
     {
         return $this->priority;
     }
@@ -330,5 +369,4 @@ class Crawlable implements CrawlableInterface
     {
         return (string) $this->uri;
     }
-
 }

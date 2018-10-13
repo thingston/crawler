@@ -110,4 +110,39 @@ class CrawlableTest extends TestCase
         $this->assertEquals($headers, $crawlable->getHeaders());
         $this->assertSame($body, $crawlable->getBody());
     }
+
+    public function testPeriodicity()
+    {
+        $crawlable = new Crawlable(UriFactory::create('http://example.org'));
+
+        $this->assertEquals(Crawlable::PERIODICITY_ALWAYS, $crawlable->getPeriodicity());
+        $this->assertTrue($crawlable->isPeriodicity());
+
+        $periods = [1, 24, 7 * 24, 30 * 24, 365 * 24];
+        $crawlable->setCrawled(new \DateTime());
+
+        foreach ($periods as $period) {
+            $crawlable->setPeriodicity(Crawlable::PERIODICITY_HOURLY);
+            $this->assertFalse($crawlable->isPeriodicity());
+            $crawlable->setPeriodicity(Crawlable::PERIODICITY_DAILY);
+            $this->assertFalse($crawlable->isPeriodicity());
+            $crawlable->setPeriodicity(Crawlable::PERIODICITY_WEEKLY);
+            $this->assertFalse($crawlable->isPeriodicity());
+            $crawlable->setPeriodicity(Crawlable::PERIODICITY_MONTHLY);
+            $this->assertFalse($crawlable->isPeriodicity());
+            $crawlable->setPeriodicity(Crawlable::PERIODICITY_YEARLY);
+            $this->assertFalse($crawlable->isPeriodicity());
+        }
+    }
+
+    public function testPriority()
+    {
+        $crawlable = new Crawlable(UriFactory::create('http://example.org'));
+
+        $this->assertNull($crawlable->getPriority());
+
+        $priotity = 50;
+        $crawlable->setPriority($priotity);
+        $this->assertEquals($priotity, $crawlable->getPriority());
+    }
 }
