@@ -139,9 +139,9 @@ class CrawlableTest extends TestCase
     {
         $crawlable = new Crawlable(UriFactory::create('http://example.org'));
 
-        $this->assertNull($crawlable->getPriority());
+        $this->assertEquals(0, $crawlable->getPriority());
 
-        $priotity = 50;
+        $priotity = rand(-10, 10);
         $crawlable->setPriority($priotity);
         $this->assertEquals($priotity, $crawlable->getPriority());
     }

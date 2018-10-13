@@ -12,7 +12,7 @@
 namespace Thingston\Crawler\Crawlable;
 
 use Thingston\Crawler\Crawlable\CrawlableInterface;
-use Thingston\Crawler\Storage\ArrayStorage;
+use Thingston\Crawler\Storage\PriorityArrayStorage;
 use Thingston\Crawler\Storage\StorageAwareTrait;
 use Thingston\Crawler\Storage\StorageInterface;
 
@@ -36,7 +36,7 @@ class CrawlableQueue implements CrawlableQueueInterface
      */
     public function __construct(StorageInterface $storage = null)
     {
-        $this->setStorage($storage ?? new ArrayStorage());
+        $this->setStorage($storage ?? new PriorityArrayStorage());
     }
 
     /**

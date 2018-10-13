@@ -25,7 +25,7 @@ class ArrayStorage implements StorageInterface
     /**
      * @var array
      */
-    private $elements = [];
+    protected $elements = [];
 
     /**
      * Create new instance.

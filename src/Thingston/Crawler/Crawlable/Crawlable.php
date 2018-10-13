@@ -54,7 +54,7 @@ class Crawlable implements CrawlableInterface
     /**
      * @var int
      */
-    private $priority;
+    private $priority = 0;
 
     /**
      * @var duration
@@ -151,7 +151,7 @@ class Crawlable implements CrawlableInterface
     /**
      * Get periodicity.
      *
-     * @return int|null
+     * @return int
      */
     public function getPeriodicity(): int
     {
@@ -212,9 +212,9 @@ class Crawlable implements CrawlableInterface
     /**
      * Get priority.
      *
-     * @return int|null
+     * @return int
      */
-    public function getPriority(): ?int
+    public function getPriority(): int
     {
         return $this->priority;
     }

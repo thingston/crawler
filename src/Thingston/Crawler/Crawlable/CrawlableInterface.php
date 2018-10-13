@@ -73,7 +73,7 @@ interface CrawlableInterface
     /**
      * Get periodicity.
      *
-     * @return int|null
+     * @return int
      */
     public function getPeriodicity(): int;
 
@@ -95,9 +95,9 @@ interface CrawlableInterface
     /**
      * Get priority.
      *
-     * @return int|null
+     * @return int
      */
-    public function getPriority(): ?int;
+    public function getPriority(): int;
 
     /**
      * Set start microtime.
