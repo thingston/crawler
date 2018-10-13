@@ -3,8 +3,13 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Thingston\Crawler\Crawler;
+use Thingston\Crawler\Observer\RedirectionObserver;
+use Thingston\Crawler\Observer\LinksObserver;
 
-$crawler = new Crawler('MyBot/1.0');
+$crawler = new Crawler('MyBot/1.0', [
+    new RedirectionObserver(),
+    new LinksObserver(),
+]);
 
 $crawler->setDepth(1)
         ->setLimit(20);

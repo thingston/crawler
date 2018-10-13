@@ -171,7 +171,7 @@ class Crawler implements LoggerAwareInterface
      * @param string $userAgent
      * @param LoggerInterface $logger
      */
-    public function __construct(string $userAgent, LoggerInterface $logger = null)
+    public function __construct(string $userAgent, array $observers = [], LoggerInterface $logger = null)
     {
         $this->logger = $logger ?? new NullLogger();
 
@@ -182,8 +182,9 @@ class Crawler implements LoggerAwareInterface
                 ->setDepth(self::DEFAULT_DEPTH)
                 ->setRespectRobots(self::DEFAULT_ROBOTS);
 
-        $this->addObserver(new Observer\RedirectionObserver());
-        $this->addObserver(new Observer\LinksObserver());
+        foreach ($observers as $observer) {
+            $this->addObserver($observer);
+        }
     }
 
     /**

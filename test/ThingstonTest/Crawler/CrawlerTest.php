@@ -105,7 +105,7 @@ class CrawlerTest extends TestCase
 
     public function testObservers()
     {
-        $crawler = new Crawler('MyBot/1.0');
+        $crawler = new Crawler('MyBot/1.0', [new Observer\RedirectionObserver()]);
         $this->assertCount(1, $crawler->getObservers());
 
         $observer = new Observer\NullObserver();
