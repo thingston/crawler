@@ -72,7 +72,12 @@ class Crawler implements LoggerAwareInterface
     /**
      * Default flag to respect robots.txt
      */
-    const DEFAULT_ROBOTS = true;
+    const DEFAULT_RESPECT_ROBOTS = true;
+
+    /**
+     * Default flag to respect periodicity
+     */
+    const DEFAULT_RESPECT_PERIODICITY = true;
 
     /**
      * Logger messages.
@@ -93,6 +98,7 @@ class Crawler implements LoggerAwareInterface
     const LOG_LIMIT_SET = 'Limit set.';
     const LOG_DEPTH_SET = 'Max depth set.';
     const LOG_RESPECT_ROBOTS_SET = 'Respect robots set.';
+    const LOG_RESPECT_PERIODICITY_SET = 'Respect periodicity set.';
     const LOG_OBSERVER_ADDED = 'Observer added.';
     const LOG_OBSERVER_REMOVED = 'Observer removed.';
     const LOG_POOL_CREATED = 'New pool created.';
@@ -158,6 +164,11 @@ class Crawler implements LoggerAwareInterface
     private $respectRobots;
 
     /**
+     * @var bool
+     */
+    private $respectPeriodicity;
+
+    /**
      * @var array
      */
     private $observers = [];
@@ -180,7 +191,8 @@ class Crawler implements LoggerAwareInterface
                 ->setConcurrency(self::DEFAULT_CONCURRENCY)
                 ->setLimit(self::DEFAULT_LIMIT)
                 ->setDepth(self::DEFAULT_DEPTH)
-                ->setRespectRobots(self::DEFAULT_ROBOTS);
+                ->setRespectRobots(self::DEFAULT_RESPECT_ROBOTS)
+                ->setRespectPeriodicity(self::DEFAULT_RESPECT_PERIODICITY);
 
         foreach ($observers as $observer) {
             $this->addObserver($observer);
@@ -471,6 +483,30 @@ class Crawler implements LoggerAwareInterface
     }
 
     /**
+     * Set periodicity flag.
+     *
+     * @param bool $respectPeriodicity
+     * @return Crawler
+     */
+    public function setRespectPeriodicity(bool $respectPeriodicity): Crawler
+    {
+        $this->respectPeriodicity = $respectPeriodicity;
+        $this->logger->debug(self::LOG_RESPECT_PERIODICITY_SET, ['respect_periodicity' => $respectPeriodicity]);
+
+        return $this;
+    }
+
+    /**
+     * Get periodicity flag.
+     *
+     * @return bool
+     */
+    public function getRespectPeriodicity(): bool
+    {
+        return $this->respectPeriodicity;
+    }
+
+    /**
      * Add observer.
      *
      * @param ObserverInterface $observer
@@ -609,6 +645,10 @@ class Crawler implements LoggerAwareInterface
                     $this->logger->debug(self::LOG_ROBOTS_DISALLOWED, ['uri' => (string) $crawlable->getUri()]);
                     continue;
                 }
+            }
+
+            if (true === $this->respectPeriodicity && false === $crawlable->isPeriodicity()) {
+                continue;
             }
 
             $requeest = new Request('GET', $crawlable->getUri());
