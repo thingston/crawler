@@ -11,14 +11,15 @@
 
 namespace Thingston\Crawler\Profiler;
 
+use Purl\Url;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 
 /**
- * Same host profiler.
+ * Same domain profiler.
  *
  * @author Pedro Ferreira <pedro@thingston.com>
  */
-class SameHostProfiler implements ProfilerInterface
+class SameDomainProfiler implements ProfilerInterface
 {
 
     /**
@@ -33,9 +34,9 @@ class SameHostProfiler implements ProfilerInterface
             return true;
         }
 
-        $parentHost = $parent->getUri()->withPath('/')->withQuery('')->withFragment('');
-        $currentHost = $crawlable->getUri()->withPath('/')->withQuery('')->withFragment('');
+        $parentDomain = (new Url($parent->getUri()))->registerableDomain;
+        $currentDomain = (new Url($crawlable->getUri()))->registerableDomain;
 
-        return $parentHost == $currentHost;
+        return $parentDomain === $currentDomain;
     }
 }

@@ -13,13 +13,13 @@ namespace Thingston\Crawler\Profiler;
 
 use PHPUnit\Framework\TestCase;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
-use Thingston\Crawler\Profiler\AllLinksProfiler;
+use Thingston\Crawler\Profiler\UniversalProfiler;
 
-class AllLinksProfilerTest extends TestCase
+class UniversalProfilerTest extends TestCase
 {
     public function testAlwaysReturnsTrue()
     {
-        $profiler = new AllLinksProfiler();
+        $profiler = new UniversalProfiler();
         $crawlable = $this->getMockBuilder(CrawlableInterface::class)->getMock();
         $this->assertTrue($profiler->crawl($crawlable));
     }

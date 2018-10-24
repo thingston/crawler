@@ -14,11 +14,11 @@ namespace Thingston\Crawler\Profiler;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 
 /**
- * All links profiler.
+ * Similar host profiler.
  *
  * @author Pedro Ferreira <pedro@thingston.com>
  */
-class AllLinksProfiler implements ProfilerInterface
+class SimilarHostProfiler implements ProfilerInterface
 {
 
     /**
@@ -29,6 +29,10 @@ class AllLinksProfiler implements ProfilerInterface
      */
     public function crawl(CrawlableInterface $crawlable): bool
     {
-        return true;
+        if (null === $parent = $crawlable->getParent()) {
+            return true;
+        }
+
+        return $parent->getUri()->getHost() === $crawlable->getUri()->getHost();
     }
 }

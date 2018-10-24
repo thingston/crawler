@@ -14,11 +14,11 @@ namespace Thingston\Crawler\Profiler;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 
 /**
- * Same host profiler.
+ * Same path profiler.
  *
  * @author Pedro Ferreira <pedro@thingston.com>
  */
-class SameHostProfiler implements ProfilerInterface
+class SamePathProfiler extends SameHostProfiler implements ProfilerInterface
 {
 
     /**
@@ -33,9 +33,18 @@ class SameHostProfiler implements ProfilerInterface
             return true;
         }
 
-        $parentHost = $parent->getUri()->withPath('/')->withQuery('')->withFragment('');
-        $currentHost = $crawlable->getUri()->withPath('/')->withQuery('')->withFragment('');
+        if (false === parent::crawl($crawlable)) {
+            return false;
+        }
 
-        return $parentHost == $currentHost;
+        $parentPath = $parent->getUri()->getPath();
+
+        if ('/' === substr($parentPath, -1)) {
+            $parentPath .= '.';
+        }
+
+        $requiredPath = rtrim(dirname($parentPath), '/') . '/';
+
+        return $requiredPath === substr($crawlable->getUri()->getPath(), 0, strlen($requiredPath));
     }
 }
