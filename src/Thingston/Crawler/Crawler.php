@@ -80,6 +80,15 @@ class Crawler implements LoggerAwareInterface
     const DEFAULT_RESPECT_PERIODICITY = true;
 
     /**
+     * Priority values
+     */
+    const PRIORITY_HIGHEST = 50;
+    const PRIORITY_HIGH = 25;
+    const PRIORITY_NORMAL = 0;
+    const PRIORITY_LOW = -25;
+    const PRIORITY_LOWEST = -50;
+
+    /**
      * Logger messages.
      */
     const LOG_START = 'Crawler started.';

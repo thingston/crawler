@@ -11,7 +11,6 @@
 
 namespace Thingston\Crawler\Crawlable;
 
-use DateInterval;
 use DateTime;
 use DateTimeInterface;
 use Psr\Http\Message\UriInterface;
@@ -65,6 +64,11 @@ class Crawlable implements CrawlableInterface
      * @var DateTimeInterface
      */
     private $crawled;
+
+    /**
+     * @var DateTimeInterface
+     */
+    private $modified;
 
     /**
      * @var int
@@ -291,6 +295,40 @@ class Crawlable implements CrawlableInterface
         }
 
         return $this->crawled;
+    }
+
+    /**
+     * Set last modified datetime.
+     *
+     * @param DateTimeInterface $modified
+     * @return CrawlableInterface
+     */
+    public function setModified(DateTimeInterface $modified): CrawlableInterface
+    {
+        $this->modified = $modified;
+
+        return $this;
+    }
+
+    /**
+     * Get last modified datetime.
+     *
+     * @return DateTimeInterface|null
+     */
+    public function getModified(): ?DateTimeInterface
+    {
+        return $this->modified;
+    }
+
+    /**
+     * Check a given date agains last modified.
+     *
+     * @param DateTimeInterface $since
+     * @return bool
+     */
+    public function isModified(DateTimeInterface $since): bool
+    {
+        return null === $this->modified || $this->modified->getTimestamp() < $since->getTimestamp();
     }
 
     /**

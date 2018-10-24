@@ -145,6 +145,29 @@ interface CrawlableInterface
     public function getCrawled(): ?DateTimeInterface;
 
     /**
+     * Set last modified datetime.
+     *
+     * @param DateTimeInterface $modified
+     * @return CrawlableInterface
+     */
+    public function setModified(DateTimeInterface $modified): CrawlableInterface;
+
+    /**
+     * Get last modified datetime.
+     *
+     * @return DateTimeInterface|null
+     */
+    public function getModified(): ?DateTimeInterface;
+
+    /**
+     * Check a given date agains last modified.
+     *
+     * @param DateTimeInterface $since
+     * @return bool
+     */
+    public function isModified(DateTimeInterface $since): bool;
+
+    /**
      * Set latest status code.
      *
      * @param int $status

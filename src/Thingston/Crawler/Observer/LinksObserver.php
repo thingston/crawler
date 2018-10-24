@@ -28,14 +28,6 @@ class LinksObserver extends NullObserver
 {
 
     /**
-     * Priority values
-     */
-    const PRIORITY_HIGHEST = 20;
-    const PRIORITY_HIGH = 10;
-    const PRIORITY_LOW = -10;
-    const PRIORITY_LOWEST = -20;
-
-    /**
      * Process a fulfilled request.
      *
      * @param ResponseInterface $response
@@ -44,6 +36,10 @@ class LinksObserver extends NullObserver
      */
     public function fulfilled(ResponseInterface $response, CrawlableInterface $crawlable, Crawler $crawler)
     {
+        if (true === $this->isEmptyBody($response) || false === $this->isHtml($response)) {
+            return;
+        }
+
         $logger = $crawler->getLogger();
 
         if ($crawler->getDepth() <= $crawlable->getDepth()) {
@@ -85,12 +81,12 @@ class LinksObserver extends NullObserver
             $subset = [new Crawlable($uri, $crawlable)];
 
             if ('' !== $uri->getQuery()) {
-                $subset[0]->setPriority(self::PRIORITY_LOW);
+                $subset[0]->setPriority(Crawler::PRIORITY_LOW);
                 array_push($subset, new Crawlable($uri->withQuery('')->withFragment(''), $crawlable));
             }
 
             if ('' !== $uri->getFragment()) {
-                $subset[0]->setPriority(self::PRIORITY_LOWEST);
+                $subset[0]->setPriority(Crawler::PRIORITY_LOWEST);
                 array_push($subset, new Crawlable($uri->withFragment(''), $crawlable));
             }
 
