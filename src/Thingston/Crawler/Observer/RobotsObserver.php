@@ -45,7 +45,7 @@ class RobotsObserver extends NullObserver
             return;
         }
 
-        $robots = new RobotsTxtParser($crawlable->getBody()->getContents());
+        $robots = new RobotsTxtParser($crawlable->getBody());
         $crawlables = [];
 
         foreach ($robots->getSitemaps() as $sitemap) {

@@ -102,7 +102,7 @@ class CrawlableTest extends TestCase
 
         $status = 200;
         $headers = ['Date' => date('c')];
-        $body = $this->getMockBuilder(StreamInterface::class)->getMock();
+        $body = random_bytes(128);
 
         $crawlable->setStatus($status)->setHeaders($headers)->setBody($body);
 

@@ -12,7 +12,6 @@
 namespace Thingston\Crawler\Crawlable;
 
 use DateTimeInterface;
-use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -168,6 +167,21 @@ interface CrawlableInterface
     public function isModified(DateTimeInterface $since): bool;
 
     /**
+     * Set MIME type.
+     *
+     * @param string $mimeType
+     * @return CrawlableInterface
+     */
+    public function setMimeType(string $mimeType): CrawlableInterface;
+
+    /**
+     * Get MIME type.
+     *
+     * @return string|null
+     */
+    public function getMimeType(): ?string;
+
+    /**
      * Set latest status code.
      *
      * @param int $status
@@ -200,15 +214,38 @@ interface CrawlableInterface
     /**
      * Set response body.
      *
-     * @param StreamInterface $body
+     * @param string $body
      * @return CrawlableInterface
      */
-    public function setBody(StreamInterface $body): CrawlableInterface;
+    public function setBody(string $body): CrawlableInterface;
 
     /**
      * Get response body.
      *
-     * @return StreamInterface|null
+     * @return string|null
      */
-    public function getBody(): ?StreamInterface;
+    public function getBody(): ?string;
+
+    /**
+     * Get content length.
+     *
+     * @return int
+     */
+    public function getLength(): int;
+
+    /**
+     * Set metadata.
+     *
+     * @param array $metadata
+     * @return CrawlableInterface
+     */
+    public function setMetadata(array $metadata): CrawlableInterface;
+
+
+    /**
+     * Get metadata.
+     *
+     * @return array|null
+     */
+    public function getMetadata(): ?array;
 }

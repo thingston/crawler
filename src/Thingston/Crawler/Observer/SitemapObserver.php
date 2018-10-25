@@ -53,7 +53,7 @@ class SitemapObserver extends NullObserver
             return;
         }
 
-        $body = $crawlable->getBody()->getContents();
+        $body = $crawlable->getBody();
         $logger = $crawler->getLogger();
 
         if (true === $isGzip) {

@@ -596,10 +596,12 @@ class Crawler implements LoggerAwareInterface
      */
     public function getRobots(UriInterface $uri, bool $retry = true): ?RobotsTxtParser
     {
-        $crawlable = new Crawlable(UriFactory::robotify($uri));
+        $crawlable = new Crawlable($uri->withPath('/robots.txt')->withQuery('')->withFragment(''));
         $key = $crawlable->getKey();
 
-        if (null === $robots = $this->getCrawledCollection()->get($key)) {
+        $crawled = $this->getCrawledCollection();
+
+        if (false === $crawled->has($key)) {
             if (false === $retry) {
                 return null;
             }
@@ -609,13 +611,9 @@ class Crawler implements LoggerAwareInterface
             return $this->getRobots($uri, false);
         }
 
-        if (null === $body = $robots->getBody()) {
-            $contents = '';
-        } else {
-            $contents = $body->getContents();
-        }
+        $body = $crawled->get($key)->getBody() ?? '';
 
-        return new RobotsTxtParser($contents);
+        return new RobotsTxtParser($body);
     }
 
     /**
@@ -808,13 +806,24 @@ class Crawler implements LoggerAwareInterface
             return;
         }
 
+        $body = $response->getBody()->getContents() ?? '';
+        $response->getBody()->rewind();
+
         $crawlable->setStatus($response->getStatusCode() ?? 500)
                 ->setHeaders($response->getHeaders() ?? [])
-                ->setBody($response->getBody());
+                ->setBody($body);
+
+        if (true === $response->hasHeader('Content-Type')) {
+            $header = current($response->getHeader('Content-Type'));
+            $mimeType = explode(';', $header)[0];
+            $crawlable->setMimeType($mimeType);
+        }
 
         $this->logger->info(self::LOG_RESPONSE, [
             'uri' => (string) $crawlable->getUri(),
             'status' => $crawlable->getStatus(),
+            'length' => $crawlable->getLength(),
+            'type' => $crawlable->getMimeType(),
         ]);
     }
 }

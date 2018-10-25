@@ -3,8 +3,8 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Thingston\Crawler\Crawler;
-use Thingston\Crawler\Observer\RedirectionObserver;
 use Thingston\Crawler\Observer\LinksObserver;
+use Thingston\Crawler\Observer\RedirectionObserver;
 
 $crawler = new Crawler('MyBot/1.0', [
     new RedirectionObserver(),

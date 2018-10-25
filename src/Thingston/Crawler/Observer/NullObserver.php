@@ -19,7 +19,7 @@ use Thingston\Crawler\Crawlable\CrawlableInterface;
 use Thingston\Crawler\Crawler;
 
 /**
- * Crawlable queue interface.
+ * Null observer.
  *
  * @author Pedro Ferreira <pedro@thingston.com>
  */
@@ -84,29 +84,18 @@ class NullObserver implements ObserverInterface
     }
 
     /**
-     * Get response content-type.
+     * Get content-type from response body.
      *
      * @param ResponseInterface $response
      * @return string
      */
     public function getContentType(ResponseInterface $response): string
     {
-        if (false === $response->hasHeader('Content-Type') && null !== $response->getBody()) {
+        if (null !== $response->getBody()) {
             $response->getBody()->rewind();
             $body = $response->getBody()->getContents();
-            $path = sys_get_temp_dir() . '/' . md5($body);
-            file_put_contents($path, $body);
-            $types[] = mime_content_type($path);
-        } else {
-            $types = $response->getHeader('Content-Type');
-        }
 
-        foreach ($types as $type) {
-            if (false !== $pos = strpos($type, ';')) {
-                $type = substr($type, 0, $pos);
-            }
-
-            return $type;
+            return (new \finfo(FILEINFO_MIME_TYPE))->buffer($body);
         }
 
         return 'text/plain';
@@ -119,9 +108,9 @@ class NullObserver implements ObserverInterface
      * @param array $types
      * @return bool
      */
-    public function hasContentTypes(ResponseInterface $response, array $types): bool
+    public function hasContentType(ResponseInterface $response, array $types): bool
     {
-         return in_array($this->getContentType($response), $types);
+        return in_array($this->getContentType($response), $types);
     }
 
     /**
@@ -169,7 +158,7 @@ class NullObserver implements ObserverInterface
      */
     public function isHtml(ResponseInterface $response): bool
     {
-        return $this->hasContentTypes($response, ['text/html', 'text/x-server-parsed-html']);
+        return $this->hasContentType($response, ['text/html', 'text/x-server-parsed-html']);
     }
 
     /**
@@ -180,7 +169,7 @@ class NullObserver implements ObserverInterface
      */
     public function isXml(ResponseInterface $response): bool
     {
-        return $this->hasContentTypes($response, ['text/xml', 'application/xml']);
+        return $this->hasContentType($response, ['text/xml', 'application/xml']);
     }
 
     /**
@@ -191,6 +180,6 @@ class NullObserver implements ObserverInterface
      */
     public function isGzip(ResponseInterface $response): bool
     {
-        return $this->hasContentTypes($response, ['application/x-gzip', 'application/gzip', 'application/zlib']);
+        return $this->hasContentType($response, ['application/x-gzip', 'application/gzip', 'application/zlib']);
     }
 }

@@ -14,7 +14,6 @@ namespace Thingston\Crawler\Crawlable;
 use DateTime;
 use DateTimeInterface;
 use Psr\Http\Message\UriInterface;
-use Psr\Http\Message\StreamInterface;
 use Thingston\Crawler\UriFactory;
 
 /**
@@ -71,6 +70,11 @@ class Crawlable implements CrawlableInterface
     private $modified;
 
     /**
+     * @var string
+     */
+    private $mimeType;
+
+    /**
      * @var int
      */
     private $status;
@@ -81,9 +85,14 @@ class Crawlable implements CrawlableInterface
     private $headers;
 
     /**
-     * @var StreamInterface
+     * @var string
      */
     private $body;
+
+    /**
+     * @var array
+     */
+    private $metadata;
 
     /**
      * Create new instance.
@@ -355,6 +364,29 @@ class Crawlable implements CrawlableInterface
     }
 
     /**
+     * Set MIME type.
+     *
+     * @param string $mimeType
+     * @return CrawlableInterface
+     */
+    public function setMimeType(string $mimeType): CrawlableInterface
+    {
+        $this->mimeType = $mimeType;
+
+        return $this;
+    }
+
+    /**
+     * Get MIME type.
+     *
+     * @return string|null
+     */
+    public function getMimeType(): ?string
+    {
+        return $this->mimeType;
+    }
+
+    /**
      * Set HTTPS headers.
      *
      * @param array $headers
@@ -380,10 +412,10 @@ class Crawlable implements CrawlableInterface
     /**
      * Set response body.
      *
-     * @param StreamInterface $body
+     * @param string $body
      * @return CrawlableInterface
      */
-    public function setBody(StreamInterface $body): CrawlableInterface
+    public function setBody(string $body): CrawlableInterface
     {
         $this->body = $body;
 
@@ -393,11 +425,44 @@ class Crawlable implements CrawlableInterface
     /**
      * Get response body.
      *
-     * @return StreamInterface|null
+     * @return string|null
      */
-    public function getBody(): ?StreamInterface
+    public function getBody(): ?string
     {
         return $this->body;
+    }
+
+    /**
+     * Get content length.
+     *
+     * @return int
+     */
+    public function getLength(): int
+    {
+        return strlen($this->body);
+    }
+
+    /**
+     * Set metadata.
+     *
+     * @param array $metadata
+     * @return CrawlableInterface
+     */
+    public function setMetadata(array $metadata): CrawlableInterface
+    {
+        $this->metadata = $metadata;
+
+        return $this;
+    }
+
+    /**
+     * Get metadata.
+     *
+     * @return array|null
+     */
+    public function getMetadata(): ?array
+    {
+        return $this->metadata;
     }
 
     /**

@@ -5,8 +5,8 @@ require __DIR__ . '/../vendor/autoload.php';
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Thingston\Crawler\Crawler;
-use Thingston\Crawler\Observer\RedirectionObserver;
 use Thingston\Crawler\Observer\LinksObserver;
+use Thingston\Crawler\Observer\RedirectionObserver;
 
 $observers = [
     new RedirectionObserver(),
