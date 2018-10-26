@@ -77,7 +77,12 @@ class LinksObserver extends NullObserver
                 continue;
             }
 
-            $uri = UriFactory::absolutify($a->getAttribute('href'), $base);
+            try {
+                $uri = UriFactory::absolutify($a->getAttribute('href'), $base);
+            } catch (Exception $e) {
+                continue;
+            }
+
             $subset = [new Crawlable($uri, $crawlable)];
 
             if ('' !== $uri->getQuery()) {
