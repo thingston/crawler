@@ -11,6 +11,7 @@
 
 namespace Thingston\Crawler\Observer;
 
+use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +19,6 @@ use Zend\Feed\Reader\Reader;
 use Thingston\Crawler\Crawlable\Crawlable;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 use Thingston\Crawler\Crawler;
-use Thingston\Crawler\UriFactory;
 
 /**
  * Feed observer.
@@ -62,16 +62,16 @@ class FeedObserver extends NullObserver
                 continue;
             }
 
-            $target = new Crawlable(UriResolver::resolve($base, new Uri($link)), $crawlable);
-            $target->setPriority(self::FEED_PRIORITY);
+            $item = new Crawlable(UriResolver::resolve($base, new Uri($link)), $crawlable);
+            $item->setPriority(self::FEED_PRIORITY);
 
-            if (null !== $dateCreated = $entry->getDateCreated()) {
-                $target->setModified($dateModified);
-            } elseif (null !== $dateModified = $entry->getDateModified()) {
-                $target->setModified($dateCreated);
+            if (null !== $dateModified = $entry->getDateModified()) {
+                $item->setModified($dateModified);
+            } elseif (null !== $dateCreated = $entry->getDateCreated()) {
+                $item->setModified($dateCreated);
             }
 
-            $crawlables[$target->getKey()] = $target;
+            $crawlables[$item->getKey()] = $item;
         }
 
         $this->enqueue($crawlables, $crawler);

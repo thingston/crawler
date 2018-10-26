@@ -36,7 +36,7 @@ class LinksObserver extends NullObserver
      */
     public function fulfilled(ResponseInterface $response, CrawlableInterface $crawlable, Crawler $crawler)
     {
-        if (true === $this->isEmptyBody($response) || false === $this->isHtml($response)) {
+        if (false === $this->isHtml($response)) {
             return;
         }
 
@@ -52,7 +52,7 @@ class LinksObserver extends NullObserver
         }
 
         try {
-            $body = $response->getBody()->getContents();
+            $body = $crawlable->getBody();
             $dom = new DomCrawler($body, $crawlable->getUri());
         } catch (Exception $e) {
             $logger->info('No DOM present; links extraction ignored.', [
