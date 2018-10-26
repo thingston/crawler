@@ -14,7 +14,6 @@ namespace Thingston\Crawler\Observer;
 use Exception;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\UriInterface;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 use Thingston\Crawler\Crawler;
 
@@ -181,5 +180,20 @@ class NullObserver implements ObserverInterface
     public function isGzip(ResponseInterface $response): bool
     {
         return $this->hasContentType($response, ['application/x-gzip', 'application/gzip', 'application/zlib']);
+    }
+
+    /**
+     * Check response is a valid RSS/Atom feed.
+     *
+     * @param ResponseInterface $response
+     * @return bool
+     */
+    public function isFeed(ResponseInterface $response): bool
+    {
+        $types = [
+            'application/rss+xml', 'application/rdf+xml', 'application/atom+xml', 'application/xml', 'text/xml'
+        ];
+
+        return $this->hasContentType($response, $types);
     }
 }
