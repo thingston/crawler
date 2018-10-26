@@ -21,7 +21,7 @@ foreach ($crawler->getCrawledCollection() as $crawled) {
     $status = $crawled->getStatus();
     $uri = $crawled->getUri();
     $duration = number_format($crawled->getDuration(), 2);
-    $length = strlen($crawled->getBody()->getContents());
+    $length = $crawled->getLength();
 
     echo sprintf('%s [%s] %s (%s secs, %s bytes)', $datetime, $status, $uri, $duration, $length) . PHP_EOL;
 }

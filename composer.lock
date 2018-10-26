@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "91745d6ed5591623f58c6325b848df03",
+    "content-hash": "cd575d09990e4b4156cc7fdc5e75f269",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -186,6 +186,63 @@
                 "url"
             ],
             "time": "2017-03-20T17:10:46+00:00"
+        },
+        {
+            "name": "jakubkulhan/chrome-devtools-protocol",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jakubkulhan/chrome-devtools-protocol.git",
+                "reference": "66f97366c812025eb7807818ff45b071503572dd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jakubkulhan/chrome-devtools-protocol/zipball/66f97366c812025eb7807818ff45b071503572dd",
+                "reference": "66f97366c812025eb7807818ff45b071503572dd",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.3",
+                "php": "~7.1",
+                "symfony/filesystem": ">=2.3",
+                "symfony/process": ">=3.3",
+                "wrench/wrench": "^2.0"
+            },
+            "require-dev": {
+                "jakub-onderka/php-parallel-lint": "~0.9",
+                "nette/php-generator": "~2.1|~3.0",
+                "phpstan/phpstan": "~0.9",
+                "phpunit/phpunit": "~6.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ChromeDevtoolsProtocol\\": [
+                        "src/ChromeDevtoolsProtocol/",
+                        "gen-src/ChromeDevtoolsProtocol/"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jakub Kulhan",
+                    "email": "jakub.kulhan@gmail.com"
+                }
+            ],
+            "description": "Chrome Devtools Protocol client for PHP",
+            "keywords": [
+                "automation",
+                "chrome",
+                "chrome-devtools",
+                "chrome-devtools-protocol",
+                "headless-chrome",
+                "web"
+            ],
+            "time": "2018-10-22T09:35:59+00:00"
         },
         {
             "name": "jeremykendall/php-domain-parser",
@@ -582,6 +639,56 @@
             "time": "2018-10-02T12:40:59+00:00"
         },
         {
+            "name": "symfony/filesystem",
+            "version": "v4.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/filesystem.git",
+                "reference": "596d12b40624055c300c8b619755b748ca5cf0b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/596d12b40624055c300c8b619755b748ca5cf0b5",
+                "reference": "596d12b40624055c300c8b619755b748ca5cf0b5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1.3",
+                "symfony/polyfill-ctype": "~1.8"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Filesystem\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Filesystem Component",
+            "homepage": "https://symfony.com",
+            "time": "2018-10-02T12:40:59+00:00"
+        },
+        {
             "name": "symfony/polyfill-ctype",
             "version": "v1.9.0",
             "source": {
@@ -699,6 +806,55 @@
             "time": "2018-08-06T14:22:27+00:00"
         },
         {
+            "name": "symfony/process",
+            "version": "v4.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "ee33c0322a8fee0855afcc11fff81e6b1011b529"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/ee33c0322a8fee0855afcc11fff81e6b1011b529",
+                "reference": "ee33c0322a8fee0855afcc11fff81e6b1011b529",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Process\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Process Component",
+            "homepage": "https://symfony.com",
+            "time": "2018-10-02T12:40:59+00:00"
+        },
+        {
             "name": "t1gor/robots-txt-parser",
             "version": "v0.2.4",
             "source": {
@@ -812,6 +968,69 @@
                 "x-robots-tag"
             ],
             "time": "2017-12-17T14:23:27+00:00"
+        },
+        {
+            "name": "wrench/wrench",
+            "version": "v2.0.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/varspool/Wrench.git",
+                "reference": "92fb5d1c5d7a6f65884ade658b6271de93edafc2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/varspool/Wrench/zipball/92fb5d1c5d7a6f65884ade658b6271de93edafc2",
+                "reference": "92fb5d1c5d7a6f65884ade658b6271de93edafc2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-sockets": "*",
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.5",
+                "squizlabs/php_codesniffer": "*"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Wrench": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "WTFPL"
+            ],
+            "authors": [
+                {
+                    "name": "Dominic Scheirlinck",
+                    "email": "dominic@varspool.com",
+                    "homepage": "http://www.somethingemporium.com/"
+                },
+                {
+                    "name": "Simon Samtleben",
+                    "email": "web@lemmingzshadow.net",
+                    "homepage": "http://lemmingzshadow.net/"
+                },
+                {
+                    "name": "Nico Kaiser",
+                    "email": "nico@kaiser.me",
+                    "homepage": "http://siriux.net/"
+                }
+            ],
+            "description": "PHP WebSocket client/server library",
+            "homepage": "http://github.com/varspool/Wrench",
+            "keywords": [
+                "WebSockets",
+                "hybi",
+                "websocket"
+            ],
+            "time": "2017-02-12T02:08:51+00:00"
         }
     ],
     "packages-dev": [
