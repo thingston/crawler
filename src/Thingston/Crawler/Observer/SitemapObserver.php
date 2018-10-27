@@ -3,7 +3,6 @@
 /**
  * Thingston Crawler
  *
- * @version 0.4.0
  * @link https://github.com/thingston/crawler Public Git repository
  * @copyright (c) 2018, Pedro Ferreira <https://thingston.com>
  * @license https://opensource.org/licenses/MIT MIT
