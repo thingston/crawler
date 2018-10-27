@@ -55,6 +55,21 @@ interface CrawlableInterface
     public function getParent(): ?CrawlableInterface;
 
     /**
+     * Set canonical.
+     *
+     * @param CrawlableInterface $canonical
+     * @return CrawlableInterface
+     */
+    public function setCanonical(CrawlableInterface $canonical): CrawlableInterface;
+
+    /**
+     * Get canonical Crawlable.
+     *
+     * @return \Thingston\Crawler\CrawlableInterface|null
+     */
+    public function getCanonical(): ?CrawlableInterface;
+
+    /**
      * Get depth.
      *
      * @return int

@@ -28,6 +28,28 @@ class LinksObserver extends NullObserver
 {
 
     /**
+     * @var bool
+     */
+    private $withQuery;
+
+    /**
+     * @var bool
+     */
+    private $withFragment;
+
+    /**
+     * Create new instance.
+     *
+     * @param bool $withQuery
+     * @param bool $withFragment
+     */
+    public function __construct(bool $withQuery = true, bool $withFragment = false)
+    {
+        $this->withQuery = $withQuery;
+        $this->withFragment = $withFragment;
+    }
+
+    /**
      * Process a fulfilled request.
      *
      * @param ResponseInterface $response
@@ -71,26 +93,56 @@ class LinksObserver extends NullObserver
 
         $children = [];
 
-        /* @var $a \DOMElement */
-        foreach ($dom->filter('a') as $a) {
-            if (false === $a->hasAttribute('href')) {
+        /* @var $tag \DOMElement */
+        foreach ($dom->filter('link') as $tag) {
+            if (false === $tag->hasAttribute('rel') || false === $tag->hasAttribute('href') || 'canonical' !== $tag->getAttribute('rel')) {
                 continue;
             }
 
             try {
-                $uri = UriFactory::absolutify($a->getAttribute('href'), $base);
+                $uri = UriFactory::absolutify($tag->getAttribute('href'), $base);
             } catch (Exception $e) {
                 continue;
             }
 
+            $canonical = (new Crawlable($uri))->setPriority(Crawler::PRIORITY_HIGH);
+            $key = $canonical->getKey();
+
+            if (true === $crawled->has($key)) {
+                $canonical = $crawled->get($key);
+            }
+
+            $crawlable->setCanonical($canonical);
+            $crawling->enqueue($crawlable);
+        }
+
+        foreach ($dom->filter('a') as $tag) {
+            if (false === $tag->hasAttribute('href')) {
+                continue;
+            }
+
+            try {
+                $uri = UriFactory::absolutify($tag->getAttribute('href'), $base);
+            } catch (Exception $e) {
+                continue;
+            }
+
+            if (false === $this->withQuery) {
+                $uri = $uri->withQuery('');
+            }
+
+            if (false === $this->withFragment) {
+                $uri = $uri->withFragment('');
+            }
+
             $subset = [new Crawlable($uri, $crawlable)];
 
-            if ('' !== $uri->getQuery()) {
+            if (true === $this->withQuery && '' !== $uri->getQuery()) {
                 $subset[0]->setPriority(Crawler::PRIORITY_LOW);
                 array_push($subset, new Crawlable($uri->withQuery('')->withFragment(''), $crawlable));
             }
 
-            if ('' !== $uri->getFragment()) {
+            if (true === $this->withFragment && '' !== $uri->getFragment()) {
                 $subset[0]->setPriority(Crawler::PRIORITY_LOWEST);
                 array_push($subset, new Crawlable($uri->withFragment(''), $crawlable));
             }

@@ -40,6 +40,11 @@ class Crawlable implements CrawlableInterface
     private $parent;
 
     /**
+     * @var CrawlableInterface
+     */
+    private $canonical;
+
+    /**
      * @var float
      */
     private $start;
@@ -126,6 +131,29 @@ class Crawlable implements CrawlableInterface
     public function getKey(): string
     {
         return $this->key;
+    }
+
+    /**
+     * Set canonical.
+     *
+     * @param CrawlableInterface $canonical
+     * @return CrawlableInterface
+     */
+    public function setCanonical(CrawlableInterface $canonical): CrawlableInterface
+    {
+        $this->canonical = $canonical;
+
+        return $this;
+    }
+
+    /**
+     * Get canonical Crawlable.
+     *
+     * @return \Thingston\Crawler\CrawlableInterface|null
+     */
+    public function getCanonical(): ?CrawlableInterface
+    {
+        return $this->canonical;
     }
 
     /**
