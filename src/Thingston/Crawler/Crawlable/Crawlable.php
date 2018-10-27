@@ -52,7 +52,7 @@ class Crawlable implements CrawlableInterface
     /**
      * @var int
      */
-    private $periodicity = self::PERIODICITY_ALWAYS;
+    private $periodicity = self::PERIODICITY_HOURLY;
 
     /**
      * @var int
