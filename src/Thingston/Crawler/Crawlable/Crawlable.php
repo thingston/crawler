@@ -113,6 +113,17 @@ class Crawlable implements CrawlableInterface
     }
 
     /**
+     * Create new crawlable instance from a string uri.
+     *
+     * @param string $uri
+     * @return CrawlableInterface
+     */
+    public static function create(string $uri): CrawlableInterface
+    {
+        return new Crawlable(UriFactory::create($uri));
+    }
+
+    /**
      * Get URI.
      *
      * @return UriInterface

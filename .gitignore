@@ -1,2 +1,4 @@
 vendor/
 nbproject/
+examples/storage/
+!examples/storage/.gitkeep

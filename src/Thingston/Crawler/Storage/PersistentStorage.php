@@ -14,6 +14,8 @@ use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemInterface;
 use Thingston\Crawler\Crawlable\Crawlable;
+use Thingston\Crawler\Crawlable\CrawlableHydrator;
+use Thingston\Crawler\Crawlable\CrawlableHydratorInterface;
 use Thingston\Crawler\Crawlable\CrawlableProxy;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 
@@ -41,6 +43,11 @@ class PersistentStorage implements StorageInterface
     protected $table;
 
     /**
+     * @var CrawlableHydratorInterface
+     */
+    protected $hydrator;
+
+    /**
      * @var array
      */
     protected $elements = [];
@@ -51,12 +58,41 @@ class PersistentStorage implements StorageInterface
      * @param Connection $connection
      * @param FilesystemInterface $filesystem
      * @param string $table
+     * @param CrawlableHydratorInterface $hydrator
      */
-    public function __construct(Connection $connection, FilesystemInterface $filesystem, string $table = 'crawlables')
+    public function __construct(Connection $connection, FilesystemInterface $filesystem, string $table = 'crawlables', CrawlableHydratorInterface $hydrator = null)
     {
         $this->connection = $connection;
         $this->filesystem = $filesystem;
         $this->table = $table;
+        $this->hydrator = $hydrator;
+    }
+
+    /**
+     * Set hydrator.
+     *
+     * @param \HydratorInterface $hydrator
+     * @return StorageInterface
+     */
+    public function setHydrator(HydratorInterface $hydrator): StorageInterface
+    {
+        $this->hydrator = $hydrator;
+
+        return $this;
+    }
+
+    /**
+     * Get hydrator.
+     *
+     * @return CrawlableHydratorInterface
+     */
+    public function getHydrator(): CrawlableHydratorInterface
+    {
+        if (null === $this->hydrator) {
+            $this->hydrator = new CrawlableHydrator($this);
+        }
+
+        return $this->hydrator;
     }
 
     /**
@@ -78,12 +114,15 @@ class PersistentStorage implements StorageInterface
      */
     public function isEmpty(): bool
     {
-        $sql = $this->connection->createQueryBuilder()
-                ->select('COUNT(*)')
+        $qb = $this->connection->createQueryBuilder();
+
+        $sql = $qb->select('COUNT(*)')
                 ->from($this->table)
                 ->getSQL();
 
-        return 0 == $this->connection->fetchArray($sql)[0];
+        $result = $this->connection->fetchArray($sql);
+
+        return 0 === (int) $result[0];
     }
 
     /**
@@ -94,15 +133,17 @@ class PersistentStorage implements StorageInterface
      */
     public function offsetExists($key): bool
     {
-        $sql = $this->connection->createQueryBuilder()
-                ->select('COUNT(*)')
+        $qb = $this->connection->createQueryBuilder();
+
+        $sql = $qb->select('COUNT(*)')
                 ->from($this->table)
-                ->where('key = :key')
+                ->where('`key` = :key')
                 ->getSQL();
 
         $params = ['key' => $key];
+        $result = $this->connection->fetchArray($sql, $params);
 
-        return 1 == $this->connection->fetchAssoc($sql, $params)[0];
+        return 1 === (int) $result[0];
     }
 
     /**
@@ -113,19 +154,24 @@ class PersistentStorage implements StorageInterface
      */
     public function offsetGet($key)
     {
-        $sql = $this->connection->createQueryBuilder()
-                ->select('uri, key, parent')
-                ->from($this->table)
-                ->where('key = :key')
-                ->getSQL();
-
-        $params = ['key' => $key];
-
-        if (false === $row = $this->connection->fetchAssoc($sql, $params)) {
+        if (false === $this->offsetExists($key)) {
             return null;
         }
 
-        $crawlable;
+        $cn = $this->connection;
+        $qb = $cn->createQueryBuilder();
+
+        $sql = $qb->select('*')
+                ->from($this->table)
+                ->where($cn->quoteIdentifier('key') . ' = :key')
+                ->getSQL();
+
+        $params = ['key' => $key];
+        $result = $this->connection->fetchAssoc($sql, $params);
+
+        $crawlable = $this->getHydrator()->hydrate($result);
+
+        return $crawlable;
     }
 
     /**
@@ -140,7 +186,51 @@ class PersistentStorage implements StorageInterface
             throw new InvalidArgumentException(sprintf('Invalid element type; it must be an instance of "%s".', CrawlableInterface::class));
         }
 
-        $this->elements[$key] = $crawlable;
+        $cn = $this->connection;
+        $qb = $cn->createQueryBuilder();
+
+        $data = $this->getHydrator()->extract($crawlable);
+        $values = [];
+
+        foreach ($data as $name => $value) {
+            switch (strtolower(gettype($value))) {
+                case 'null' :
+                    $type = \PDO::PARAM_NULL;
+                    break;
+                case 'boolean' :
+                    $type = \PDO::PARAM_BOOL;
+                    break;
+                case 'integer' :
+                    $type = \PDO::PARAM_INT;
+                    break;
+                case 'string' :
+                case 'double' :
+                    $type = \PDO::PARAM_INT;
+                    break;
+                case 'array' :
+                case 'object' :
+                    $type = \PDO::PARAM_INT;
+                    $value = serialize($value);
+                    break;
+                default :
+                    continue;
+            }
+
+            $identifier = $cn->quoteIdentifier($name);
+            $values[$identifier] = $qb->createNamedParameter($value, $type, ":$name");
+        }
+
+        if (true === $this->offsetExists($key)) {
+            $sql = $qb->update($this->table);
+
+            foreach ($values as $identifier => $placeholder) {
+                $sql->set($identifier, $placeholder);
+            }
+        } else {
+            $sql = $qb->insert($this->table)->values($values);
+        }
+
+        $cn->executeQuery($sql->getSQL(), $data);
     }
 
     /**
@@ -160,7 +250,15 @@ class PersistentStorage implements StorageInterface
      */
     public function count(): int
     {
-        return count($this->elements);
+        $qb = $this->connection->createQueryBuilder();
+
+        $sql = $qb->select('COUNT(*)')
+                ->from($this->table)
+                ->getSQL();
+
+        $result = $this->connection->fetchArray($sql);
+
+        return (int) $result[0];
     }
 
     /**
@@ -212,4 +310,5 @@ class PersistentStorage implements StorageInterface
     {
         next($this->elements);
     }
+
 }

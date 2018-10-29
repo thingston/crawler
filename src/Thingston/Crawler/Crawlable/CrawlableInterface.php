@@ -33,6 +33,14 @@ interface CrawlableInterface
     const PERIODICITY_NEVER = 6;
 
     /**
+     * Create new crawlable instance from a string uri.
+     *
+     * @param string $uri
+     * @return CrawlableInterface
+     */
+    public static function create(string $uri): CrawlableInterface;
+
+    /**
      * Get URI.
      *
      * @return UriInterface
