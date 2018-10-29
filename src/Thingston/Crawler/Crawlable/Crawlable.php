@@ -26,77 +26,77 @@ class Crawlable implements CrawlableInterface
     /**
      * @var UriInterface
      */
-    private $uri;
+    protected $uri;
 
     /**
      * @var string
      */
-    private $key;
+    protected $key;
 
     /**
      * @var CrawlableInterface
      */
-    private $parent;
+    protected $parent;
 
     /**
      * @var CrawlableInterface
      */
-    private $canonical;
+    protected $canonical;
 
     /**
      * @var float
      */
-    private $start;
+    protected $start;
 
     /**
      * @var int
      */
-    private $periodicity = self::PERIODICITY_HOURLY;
+    protected $periodicity = self::PERIODICITY_HOURLY;
 
     /**
      * @var int
      */
-    private $priority = 0;
+    protected $priority = 0;
 
     /**
      * @var duration
      */
-    private $duration;
+    protected $duration;
 
     /**
      * @var DateTimeInterface
      */
-    private $crawled;
+    protected $crawled;
 
     /**
      * @var DateTimeInterface
      */
-    private $modified;
+    protected $modified;
 
     /**
      * @var string
      */
-    private $mimeType;
+    protected $mimeType;
 
     /**
      * @var int
      */
-    private $status;
+    protected $status;
 
     /**
      * @var array
      */
-    private $headers;
+    protected $headers;
 
     /**
      * @var string
      */
-    private $body;
+    protected $body;
 
     /**
      * @var array
      */
-    private $metadata;
+    protected $metadata;
 
     /**
      * Create new instance.
