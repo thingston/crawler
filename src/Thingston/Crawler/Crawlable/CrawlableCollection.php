@@ -69,7 +69,8 @@ class CrawlableCollection implements CrawlableCollectionInterface
      */
     public function set(string $key, CrawlableInterface $crawlable): CrawlableCollectionInterface
     {
-        $this->getStorage()[$key] = $crawlable;
+        $storage = $this->getStorage();
+        $storage[$key] = $crawlable;
 
         return $this;
     }

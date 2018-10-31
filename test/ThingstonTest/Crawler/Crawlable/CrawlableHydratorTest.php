@@ -49,7 +49,7 @@ class CrawlableHydratorTest extends TestCase
         $crawled = new DateTime(date('c', $start + $duration));
 
         $data = [
-            'uri' => $crawlable->getUri(),
+            'uri' => (string) $crawlable->getUri(),
             'key' => $crawlable->getKey(),
             'parent' => $parent->getKey(),
             'canonical' => $canonical->getKey(),
@@ -57,7 +57,7 @@ class CrawlableHydratorTest extends TestCase
             'periodicity' => 2,
             'priority' => 10,
             'duration' => $duration,
-            'crawled' => $crawled->format('c'),
+            'crawled' => $crawled->format('Y-m-d H:i:s'),
             'modified' => null,
             'mime_type' => 'text/html',
             'status' => 200,

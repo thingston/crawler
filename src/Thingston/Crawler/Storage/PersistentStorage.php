@@ -13,10 +13,9 @@ namespace Thingston\Crawler\Storage;
 use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use League\Flysystem\FilesystemInterface;
-use Thingston\Crawler\Crawlable\Crawlable;
+use PDO;
 use Thingston\Crawler\Crawlable\CrawlableHydrator;
 use Thingston\Crawler\Crawlable\CrawlableHydratorInterface;
-use Thingston\Crawler\Crawlable\CrawlableProxy;
 use Thingston\Crawler\Crawlable\CrawlableInterface;
 
 /**
@@ -50,7 +49,7 @@ class PersistentStorage implements StorageInterface
     /**
      * @var array
      */
-    protected $elements = [];
+    protected $elements;
 
     /**
      * Create new instance.
@@ -102,7 +101,9 @@ class PersistentStorage implements StorageInterface
      */
     public function clear(): StorageInterface
     {
-        $this->connection->exec('DELETE FROM ' . $this->table);
+        foreach ($this as $crawlable) {
+            $this->offsetUnset($crawlable->getKey());
+        }
 
         return $this;
     }
@@ -114,15 +115,7 @@ class PersistentStorage implements StorageInterface
      */
     public function isEmpty(): bool
     {
-        $qb = $this->connection->createQueryBuilder();
-
-        $sql = $qb->select('COUNT(*)')
-                ->from($this->table)
-                ->getSQL();
-
-        $result = $this->connection->fetchArray($sql);
-
-        return 0 === (int) $result[0];
+        return 0 === $this->count();
     }
 
     /**
@@ -171,6 +164,12 @@ class PersistentStorage implements StorageInterface
 
         $crawlable = $this->getHydrator()->hydrate($result);
 
+        if (true === $this->filesystem->has($key)) {
+            /* @var $body \League\Flysystem\File */
+            $body = $this->filesystem->get($key);
+            $crawlable->setBody($body->read());
+        }
+
         return $crawlable;
     }
 
@@ -192,24 +191,29 @@ class PersistentStorage implements StorageInterface
         $data = $this->getHydrator()->extract($crawlable);
         $values = [];
 
+        if (true === isset($data['body'])) {
+            $body = $data['body'];
+            unset($data['body']);
+        }
+
         foreach ($data as $name => $value) {
             switch (strtolower(gettype($value))) {
                 case 'null' :
-                    $type = \PDO::PARAM_NULL;
+                    $type = PDO::PARAM_NULL;
                     break;
                 case 'boolean' :
-                    $type = \PDO::PARAM_BOOL;
+                    $type = PDO::PARAM_BOOL;
                     break;
                 case 'integer' :
-                    $type = \PDO::PARAM_INT;
+                    $type = PDO::PARAM_INT;
                     break;
                 case 'string' :
                 case 'double' :
-                    $type = \PDO::PARAM_INT;
+                    $type = PDO::PARAM_INT;
                     break;
                 case 'array' :
                 case 'object' :
-                    $type = \PDO::PARAM_INT;
+                    $type = PDO::PARAM_INT;
                     $value = serialize($value);
                     break;
                 default :
@@ -221,7 +225,8 @@ class PersistentStorage implements StorageInterface
         }
 
         if (true === $this->offsetExists($key)) {
-            $sql = $qb->update($this->table);
+            $sql = $qb->update($this->table)
+                    ->where($cn->quoteIdentifier('key') . ' = :key');
 
             foreach ($values as $identifier => $placeholder) {
                 $sql->set($identifier, $placeholder);
@@ -231,6 +236,10 @@ class PersistentStorage implements StorageInterface
         }
 
         $cn->executeQuery($sql->getSQL(), $data);
+
+        if (true === isset($body)) {
+            $this->filesystem->put($key, $body);
+        }
     }
 
     /**
@@ -240,7 +249,14 @@ class PersistentStorage implements StorageInterface
      */
     public function offsetUnset($key)
     {
-        unset($this->elements[$key]);
+        $cn = $this->connection;
+        $cn->delete($this->table, [$cn->quoteIdentifier('key') => $key], [PDO::PARAM_STR]);
+
+        $fs = $this->filesystem;
+
+        if (true === $fs->has($key)) {
+            $fs->delete($key);
+        }
     }
 
     /**
@@ -262,12 +278,40 @@ class PersistentStorage implements StorageInterface
     }
 
     /**
+     * Load all elements from storage.
+     *
+     * @return array
+     */
+    public function load(): array
+    {
+        if (null === $this->elements) {
+            $this->elements = [];
+
+            $cn = $this->connection;
+            $qb = $cn->createQueryBuilder();
+
+            $sql = $qb->select($cn->quoteIdentifier('key'))
+                    ->from($this->table)
+                    ->getSQL();
+
+            $hydrator = $this->getHydrator();
+
+            foreach ($this->connection->fetchAll($sql) as $row) {
+                $this->elements[] = $hydrator->hydrate($row);
+            }
+        }
+
+        return $this->elements;
+    }
+
+    /**
      * Rewind the Iterator to the first element.
      *
      * @return void
      */
     public function rewind()
     {
+        $this->load();
         reset($this->elements);
     }
 
@@ -278,6 +322,8 @@ class PersistentStorage implements StorageInterface
      */
     public function valid(): bool
     {
+        $this->load();
+
         return false !== current($this->elements);
     }
 
@@ -288,6 +334,8 @@ class PersistentStorage implements StorageInterface
      */
     public function current()
     {
+        $this->load();
+
         return current($this->elements);
     }
 
@@ -298,6 +346,8 @@ class PersistentStorage implements StorageInterface
      */
     public function key(): string
     {
+        $this->load();
+
         return key($this->elements);
     }
 
@@ -308,7 +358,7 @@ class PersistentStorage implements StorageInterface
      */
     public function next()
     {
+        $this->load();
         next($this->elements);
     }
-
 }

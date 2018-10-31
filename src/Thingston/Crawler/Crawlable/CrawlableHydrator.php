@@ -123,6 +123,10 @@ class CrawlableHydrator implements CrawlableHydratorInterface, StorageAwareInter
             }
         }
 
+        if (true === isset($data['body'])) {
+            $crawlable->setBody($data['body']);
+        }
+
         if (true === isset($data['metadata'])) {
             if (true === is_array($data['metadata'])) {
                 $crawlable->setMetadata($data['metadata']);
@@ -156,6 +160,7 @@ class CrawlableHydrator implements CrawlableHydratorInterface, StorageAwareInter
             'mime_type' => $crawlable->getMimeType(),
             'status' => $crawlable->getStatus(),
             'headers' => $crawlable->getHeaders() ? serialize($crawlable->getHeaders()) : null,
+            'body' => $crawlable->getBody(),
             'metadata' => $crawlable->getMetadata() ? serialize($crawlable->getMetadata()) : null,
         ];
     }

@@ -800,6 +800,7 @@ class Crawler implements LoggerAwareInterface
 
         if (null === $response) {
             $crawlable->setStatus(500);
+            $this->getCrawledCollection()->set($crawlable->getKey(), $crawlable);
             $this->logger->notice(self::LOG_NO_RESPONSE, ['uri' => $crawlable->getUri()]);
 
             return;
@@ -817,6 +818,8 @@ class Crawler implements LoggerAwareInterface
             $mimeType = explode(';', $header)[0];
             $crawlable->setMimeType($mimeType);
         }
+
+        $this->getCrawledCollection()->set($crawlable->getKey(), $crawlable);
 
         $this->logger->info(self::LOG_RESPONSE, [
             'uri' => (string) $crawlable->getUri(),

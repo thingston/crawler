@@ -39,11 +39,7 @@ $filesystem = new Filesystem($adapter);
  */
 $storage = new PersistentStorage($connection, $filesystem);
 $collection = new CrawlableCollection($storage);
-
-
-$crawlable = Crawlable::create('http://example.org/index.html')->setStart(microtime(true)-1000)->setDuration(.666);
-dump($storage[$crawlable->getKey()]);
-exit;
+$collection->clear();
 
 /**
  * Observers
@@ -62,4 +58,5 @@ $logger->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logg
 /**
  * Crawler
  */
-$crawler = (new Crawler('MyBot/1.0', $observers, $logger))->start('https://www.w3.org/');
+$crawler = new Crawler('MyBot/1.0', $observers, $logger);
+$crawler->setCrawledCollection($collection)->setDepth(1)->start('https://www.bbc.com/news');
