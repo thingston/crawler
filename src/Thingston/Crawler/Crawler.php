@@ -598,9 +598,9 @@ class Crawler implements LoggerAwareInterface
         $crawlable = new Crawlable($uri->withPath('/robots.txt')->withQuery('')->withFragment(''));
         $key = $crawlable->getKey();
 
-        $crawled = $this->getCrawledCollection();
+        $crawleds = $this->getCrawledCollection();
 
-        if (false === $crawled->has($key)) {
+        if (false === $crawleds->has($key)) {
             if (false === $retry) {
                 return null;
             }
@@ -610,7 +610,7 @@ class Crawler implements LoggerAwareInterface
             return $this->getRobots($uri, false);
         }
 
-        $body = $crawled->get($key)->getBody() ?? '';
+        $body = $crawleds->get($key)->getBody() ?? '';
 
         return new RobotsTxtParser($body);
     }
@@ -623,11 +623,11 @@ class Crawler implements LoggerAwareInterface
     protected function getPoolRequests(): Generator
     {
         $crawling = $this->getCrawlingQueue();
-        $crawled = $this->getCrawledCollection();
+        $crawleds = $this->getCrawledCollection();
 
         /* @var $crawlable CrawlableInterface */
         while ($crawlable = $crawling->dequeue()) {
-            if (0 < $this->limit && $this->limit <= $crawled->count()) {
+            if (0 < $this->limit && $this->limit <= $crawleds->count()) {
                 $crawling->clear();
                 $this->logger->debug(self::LOG_LIMIT_REACH);
                 continue;
@@ -643,6 +643,15 @@ class Crawler implements LoggerAwareInterface
                 continue;
             }
 
+            if (null !== $crawled = $crawleds->get($crawlable->getKey())) {
+                if (true === $this->respectPeriodicity && false === $crawled->isPeriodicity()) {
+                    continue;
+                }
+
+                $parent = $crawlable->getParent();
+                $crawlable = $crawled->setParent($parent);
+            }
+
             if (true === $this->respectRobots && '/robots.txt' !== $crawlable->getUri()->getPath()) {
                 $uri = $crawlable->getUri();
                 $robots = $this->getRobots($uri);
@@ -653,10 +662,6 @@ class Crawler implements LoggerAwareInterface
                 }
             }
 
-            if (true === $this->respectPeriodicity && false === $crawlable->isPeriodicity()) {
-                continue;
-            }
-
             $requeest = new Request('GET', $crawlable->getUri());
 
             /* @var $observer ObserverInterface */
@@ -664,7 +669,7 @@ class Crawler implements LoggerAwareInterface
                 $observer->request($requeest, $crawlable, $this);
             }
 
-            $crawled->add($crawlable);
+            $crawleds->add($crawlable);
             $crawlable->setStart(microtime(true));
 
             $this->logger->debug(self::LOG_URI_ADDED, ['uri' => (string) $crawlable->getUri()]);
