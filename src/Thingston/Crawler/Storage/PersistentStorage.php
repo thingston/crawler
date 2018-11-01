@@ -193,8 +193,9 @@ class PersistentStorage implements StorageInterface
 
         if (true === isset($data['body'])) {
             $body = $data['body'];
-            unset($data['body']);
         }
+
+        unset($data['body']);
 
         foreach ($data as $name => $value) {
             switch (strtolower(gettype($value))) {

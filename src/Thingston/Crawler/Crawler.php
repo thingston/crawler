@@ -17,6 +17,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
@@ -182,10 +183,12 @@ class Crawler implements LoggerAwareInterface
     private $observers = [];
 
     /**
+     * @var array
+     */
+    private $summary = [];
+
+    /**
      * Create new instance.
-     *
-     * By default the following observers are registered:
-     *  - RedirectionObserver
      *
      * @param string $userAgent
      * @param LoggerInterface $logger
@@ -644,12 +647,17 @@ class Crawler implements LoggerAwareInterface
             }
 
             if (null !== $crawled = $crawleds->get($crawlable->getKey())) {
+                if ($crawled->getCrawled()->getTimestamp() > time() - 60) {
+                    continue;
+                }
+
                 if (true === $this->respectPeriodicity && false === $crawled->isPeriodicity()) {
                     continue;
                 }
 
-                $parent = $crawlable->getParent();
-                $crawlable = $crawled->setParent($parent);
+                if (null !== $crawlable->getModified() && $crawlable->getModified()->getTimestamp() < $crawled->getCrawled()->getTimestamp()) {
+                    continue;
+                }
             }
 
             if (true === $this->respectRobots && '/robots.txt' !== $crawlable->getUri()->getPath()) {
@@ -669,8 +677,8 @@ class Crawler implements LoggerAwareInterface
                 $observer->request($requeest, $crawlable, $this);
             }
 
-            $crawleds->add($crawlable);
             $crawlable->setStart(microtime(true));
+            $crawleds->add($crawlable);
 
             $this->logger->debug(self::LOG_URI_ADDED, ['uri' => (string) $crawlable->getUri()]);
             $this->logger->info(self::LOG_REQUEST_SENT, ['uri' => (string) $crawlable->getUri()]);
@@ -689,6 +697,11 @@ class Crawler implements LoggerAwareInterface
         $this->logger->info(self::LOG_START);
 
         $start = microtime(true);
+
+        $this->summary['start'] = date('c', round($start));
+        $this->summary['duration'] = 0;
+        $this->summary['count'] = 0;
+
         $crawling = $this->getCrawlingQueue();
 
         if (null !== $uri) {
@@ -698,6 +711,7 @@ class Crawler implements LoggerAwareInterface
 
         $client = $this->getClient();
         $options = $client->getConfig();
+        //dump($options);exit;
 
         while (false === $crawling->isEmpty()) {
             $pool = new Pool($client, $this->getPoolRequests(), [
@@ -716,12 +730,9 @@ class Crawler implements LoggerAwareInterface
             $promise->wait();
         }
 
-        $duration = microtime(true) - $start;
+        $this->summary['duration'] = microtime(true) - $start;
 
-        $this->logger->info(self::LOG_COMPLETED, [
-            'count' => $this->getCrawledCollection()->count(),
-            'duration' => $duration,
-        ]);
+        $this->logger->info(self::LOG_COMPLETED, $this->summary);
     }
 
     /**
@@ -732,12 +743,12 @@ class Crawler implements LoggerAwareInterface
      */
     public function crawl(CrawlableInterface $crawlable)
     {
+        $crawlable->setStart(microtime(true));
         $this->getCrawledCollection()->add($crawlable);
 
         $this->logger->debug(self::LOG_URI_ADDED, ['uri' => (string) $crawlable->getUri()]);
 
         $key = $crawlable->getKey();
-        $crawlable->setStart(microtime(true));
 
         $this->logger->info(self::LOG_REQUEST_SENT, ['uri' => (string) $crawlable->getUri()]);
 
@@ -776,7 +787,13 @@ class Crawler implements LoggerAwareInterface
     {
         $crawlable = $this->getCrawledCollection()->get($key);
 
-        $response = $reason instanceof RequestException && $reason->hasResponse() ? $reason->getResponse() : null;
+        if ($reason instanceof RequestException && $reason->hasResponse()) {
+            $response = $reason->getResponse();
+        } else {
+            $response = new Response(500, [], $reason->getMessage());
+            $this->logger->notice(self::LOG_NO_RESPONSE, ['uri' => (string) $crawlable->getUri()]);
+        }
+
         $this->updateCrawlable($crawlable, $response);
 
         /* @var $observer ObserverInterface */
@@ -792,7 +809,7 @@ class Crawler implements LoggerAwareInterface
      * @param ResponseInterface $response
      * @return void
      */
-    protected function updateCrawlable(CrawlableInterface $crawlable, ResponseInterface $response = null)
+    protected function updateCrawlable(CrawlableInterface $crawlable, ResponseInterface $response)
     {
         if (null !== $start = $crawlable->getStart()) {
             $crawlable->setDuration(microtime(true) - $start);
@@ -801,14 +818,6 @@ class Crawler implements LoggerAwareInterface
                 'uri' => (string) $crawlable->getUri(),
                 'duration' => $crawlable->getDuration(),
             ]);
-        }
-
-        if (null === $response) {
-            $crawlable->setStatus(500);
-            $this->getCrawledCollection()->set($crawlable->getKey(), $crawlable);
-            $this->logger->notice(self::LOG_NO_RESPONSE, ['uri' => $crawlable->getUri()]);
-
-            return;
         }
 
         $body = $response->getBody()->getContents() ?? '';
@@ -825,6 +834,11 @@ class Crawler implements LoggerAwareInterface
         }
 
         $this->getCrawledCollection()->set($crawlable->getKey(), $crawlable);
+
+        $status = $crawlable->getStatus();
+
+        $this->summary['count']++;
+        $this->summary[$status] = true === isset($this->summary[$status]) ? $this->summary[$status] + 1 : 1;
 
         $this->logger->info(self::LOG_RESPONSE, [
             'uri' => (string) $crawlable->getUri(),

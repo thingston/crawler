@@ -74,7 +74,7 @@ class LinksObserver extends NullObserver
 
         try {
             $body = $crawlable->getBody();
-            $dom = new DomCrawler($body, $crawlable->getUri());
+            $dom = new DomCrawler($body, (string) $crawlable->getUri());
         } catch (Exception $e) {
             $logger->info('No DOM present; links extraction ignored.', [
                 'uri' => (string) $crawlable->getUri(),
@@ -147,16 +147,15 @@ class LinksObserver extends NullObserver
             }
 
             foreach ($subset as $child) {
+                if ($base == $child->getUri()) {
+                    continue;
+                }
+
                 if (false === $profiler->crawl($child)) {
                     continue;
                 }
 
                 $key = $child->getKey();
-
-                if (true === $crawled->has($key)) {
-                    continue;
-                }
-
                 $children[$key] = $child;
             }
         }

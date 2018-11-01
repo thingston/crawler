@@ -119,6 +119,7 @@ class JavascriptObserver extends NullObserver
                 $duration = microtime(true) - $start;
 
                 $crawlable->setStart($start)->setDuration($duration)->setStatus($status)->setHeaders($headers)->setBody($body);
+                $crawler->getCrawledCollection()->add($crawlable);
 
                 $logger->debug(Crawler::LOG_RESPONSE, [
                     'uri' => (string) $uri,

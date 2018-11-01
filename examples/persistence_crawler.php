@@ -7,7 +7,6 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
-use Thingston\Crawler\Crawlable\Crawlable;
 use Thingston\Crawler\Crawler;
 use Thingston\Crawler\Crawlable\CrawlableCollection;
 use Thingston\Crawler\Storage\PersistentStorage;
@@ -59,4 +58,6 @@ $logger->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logg
  * Crawler
  */
 $crawler = new Crawler('MyBot/1.0', $observers, $logger);
-$crawler->setCrawledCollection($collection)->setDepth(1)->start('https://www.bbc.com/news');
+$crawler->setCrawledCollection($collection)
+        ->setDepth(1)
+        ->start('https://www.w3.org/');

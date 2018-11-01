@@ -51,7 +51,7 @@ class Crawlable implements CrawlableInterface
     /**
      * @var int
      */
-    protected $periodicity = self::PERIODICITY_HOURLY;
+    protected $periodicity = self::PERIODICITY_ALWAYS;
 
     /**
      * @var int
@@ -302,6 +302,7 @@ class Crawlable implements CrawlableInterface
     public function setDuration(float $duration): CrawlableInterface
     {
         $this->duration = $duration;
+        $this->crawled = new DateTime(date('c', round($this->start + $this->duration)));
 
         return $this;
     }
