@@ -114,7 +114,7 @@ class CrawlableTest extends TestCase
     {
         $crawlable = new Crawlable(UriFactory::create('http://example.org'));
 
-        $this->assertEquals(Crawlable::PERIODICITY_HOURLY, $crawlable->getPeriodicity());
+        $this->assertEquals(Crawlable::PERIODICITY_ALWAYS, $crawlable->getPeriodicity());
         $this->assertTrue($crawlable->isPeriodicity());
 
         $periods = [1, 24, 7 * 24, 30 * 24, 365 * 24];

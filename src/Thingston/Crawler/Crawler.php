@@ -837,7 +837,7 @@ class Crawler implements LoggerAwareInterface
 
         $status = $crawlable->getStatus();
 
-        $this->summary['count']++;
+        $this->summary['count'] = true === isset($this->summary['count']) ? $this->summary['count'] + 1 : 1;;
         $this->summary[$status] = true === isset($this->summary[$status]) ? $this->summary[$status] + 1 : 1;
 
         $this->logger->info(self::LOG_RESPONSE, [
