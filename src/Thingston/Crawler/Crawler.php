@@ -647,7 +647,7 @@ class Crawler implements LoggerAwareInterface
             }
 
             if (null !== $crawled = $crawleds->get($crawlable->getKey())) {
-                if ($crawled->getCrawled()->getTimestamp() > time() - 60) {
+                if (null !== $crawled->getCrawled() && $crawled->getCrawled()->getTimestamp() > time() - 60) {
                     continue;
                 }
 
