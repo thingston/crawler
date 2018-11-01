@@ -21,6 +21,21 @@ class SameHostProfiler implements ProfilerInterface
 {
 
     /**
+     * @var bool
+     */
+    private $withScheme;
+
+    /**
+     * Create new instance.
+     *
+     * @param bool $withScheme
+     */
+    public function __construct(bool $withScheme = false)
+    {
+        $this->withScheme = $withScheme;
+    }
+
+    /**
      * Check either a given URI should crawl.
      *
      * @param CrawlableInterface $crawlable
@@ -35,6 +50,14 @@ class SameHostProfiler implements ProfilerInterface
         $parentHost = $parent->getUri()->withPath('/')->withQuery('')->withFragment('');
         $currentHost = $crawlable->getUri()->withPath('/')->withQuery('')->withFragment('');
 
-        return $parentHost == $currentHost;
+        if ($parentHost == $currentHost) {
+            return true;
+        }
+
+        if (false === $this->withScheme) {
+            return $parentHost->withScheme($currentHost->getScheme()) == $currentHost;
+        }
+
+        return false;
     }
 }
